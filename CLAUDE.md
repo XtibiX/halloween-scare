@@ -21,7 +21,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 ## Layout
 - `config.toml`: startup defaults. `settings.json`: values changed on the web page (overrides config)
 - Modes (switched on the web page, defined under `[modes.*]` in `config.toml` with label and voice effects):
-  `scary` (Skummel) and `kids` (Barnevennlig, silly not frightening, for small children)
+  `scary` (Skummel) and `kids` (Barnevennlig, silly not frightening, for small children), plus
+  `auto` (picks one per scare, below) and `off` (Av: no scares, no background sound)
 - Auto mode (`[auto]` in config, `scare/people.py`): on each scare, YOLOX-nano (`models/yolox_nano.onnx`,
   onnxruntime, ~0.2 s/frame, loaded on first use) looks at the visitors for 1.5 s; if anyone is shorter
   than `kid_height_cm` (130), or nobody is seen clearly, or it isn't calibrated, it plays the kid mode,

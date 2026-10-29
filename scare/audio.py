@@ -42,6 +42,7 @@ class Speaker:
         self._connected_checked = 0.0
         self._ambient_on = False
         self._ambient_proc = None
+        self.silent = False
 
     @property
     def busy(self):
@@ -73,6 +74,18 @@ class Speaker:
         log.info("Mode: %s", self.modes[mode]["label"])
         self.mode = mode
         # Switch the background sound right away instead of after the current file
+        self._stop_ambient()
+
+    def set_silent(self, silent):
+        """Off: no background sound (scares are blocked by the controller)."""
+        if silent == self.silent:
+            return
+        log.info("Sound %s", "off" if silent else "on")
+        self.silent = silent
+        if silent:
+            self._stop_ambient()
+
+    def _stop_ambient(self):
         proc = self._ambient_proc
         if proc and proc.poll() is None:
             proc.terminate()
@@ -262,9 +275,9 @@ class Speaker:
         def loop():
             while True:
                 sounds = self.ambient_sounds()
-                if not sounds or self.ambient_volume <= 0:
+                if not sounds or self.ambient_volume <= 0 or self.silent:
                     self._ambient_on = False
-                    time.sleep(5)
+                    time.sleep(1)
                     continue
                 self._ambient_on = True
                 try:

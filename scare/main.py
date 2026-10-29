@@ -14,6 +14,7 @@ log = logging.getLogger("halloween")
 ROOT = Path(__file__).resolve().parent.parent
 SETTINGS_FILE = ROOT / "settings.json"
 AUTO = "auto"
+OFF = "off"  # no scares and no background sound
 
 # Settings the web page may change: name -> (type, min, max)
 TUNABLE = {
@@ -72,7 +73,7 @@ class Controller:
         self.last_auto = None
 
     def _valid_mode(self, mode):
-        return mode == AUTO or mode in self.speaker.modes
+        return mode in (AUTO, OFF) or mode in self.speaker.modes
 
     def _apply_settings(self):
         self.detector.pixel_threshold = self.settings["pixel_threshold"]
@@ -81,7 +82,8 @@ class Controller:
         self.speaker.ambient_volume = self.settings["ambient_volume"]
         # In Auto the background sound comes from the kid mode, the safe choice
         mode = self.settings["mode"]
-        self.speaker.set_mode(self.auto["kid_mode"] if mode == AUTO else mode)
+        self.speaker.set_mode(self.auto["kid_mode"] if mode in (AUTO, OFF) else mode)
+        self.speaker.set_silent(mode == OFF)
 
     def update_settings(self, changes):
         for name, value in changes.items():
@@ -112,7 +114,7 @@ class Controller:
             return self.auto["kid_mode"]
 
     def scare(self, text=None, reason="motion", mode=None):
-        if self.speaker.busy:
+        if self.settings["mode"] == OFF or self.speaker.busy:
             return False
         mode = mode or self.pick_mode()
         if not self.speaker.scare(text, mode):
@@ -217,7 +219,7 @@ class Controller:
         recent_people = self.people if time.monotonic() - self.people_at < 3 else []
         return {
             **self.settings,
-            "modes": {**{k: v["label"] for k, v in self.speaker.modes.items()}, AUTO: "Auto"},
+            "modes": {**{k: v["label"] for k, v in self.speaker.modes.items()}, AUTO: "Auto", OFF: "Av"},
             "content_modes": {k: v["label"] for k, v in self.speaker.modes.items()},
             "base_mode": self.speaker.mode,
             "camera": self.camera is not None,
@@ -260,7 +262,7 @@ class Controller:
                 continue
             if self.detector.level >= self.settings["area_percent"] / 2:
                 self.motion_at = time.monotonic()
-            if not (triggered and self.settings["armed"]):
+            if not (triggered and self.settings["armed"]) or self.settings["mode"] == OFF:
                 continue
             if time.monotonic() - self.last_scare < self.settings["cooldown_seconds"]:
                 continue
