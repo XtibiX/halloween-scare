@@ -1,14 +1,16 @@
 #!/bin/bash
-# One-time setup that doesn't need sudo: Python venv with Piper TTS and the
-# Norwegian voice. Run the apt install from CLAUDE.md first.
+# One-time setup that doesn't need sudo. Run the apt install from README.md first.
+# Safe to run again: it skips what is already done.
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Python venv with Piper TTS. system-site-packages: use apt's picamera2,
+# numpy, flask and pillow instead of compiling them
 if [ ! -d .venv ]; then
-    # system-site-packages: use apt's picamera2, numpy and flask
     python3 -m venv --system-site-packages .venv
 fi
-.venv/bin/pip install --upgrade piper-tts
+# no --upgrade: a newer Piper could change its command-line options
+.venv/bin/pip install piper-tts
 
 # Piper voices: Norwegian (kids mode, default) and British English (scary mode)
 BASE=https://huggingface.co/rhasspy/piper-voices/resolve/main
@@ -20,13 +22,26 @@ for v in no/no_NO/talesyntese/medium/no_NO-talesyntese-medium \
         [ -s "$f" ] || curl -fL --retry 3 -o "$f" "$BASE/$v.$ext"
     done
 done
-VOICE=no_NO-talesyntese-medium
 
 # Person detector for Auto mode (YOLOX-nano, ~4 MB)
 mkdir -p models
 [ -s models/yolox_nano.onnx ] || curl -fL --retry 3 -o models/yolox_nano.onnx \
     https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_nano.onnx
 
-mkdir -p cache
-echo "Setup done. Test the voice with:"
-echo "  echo 'Hei, jeg ser deg.' | .venv/bin/python -m piper -m voices/$VOICE.onnx -f cache/test.wav && pw-play cache/test.wav"
+# Bluetooth audio on a headless Pi: WirePlumber otherwise only allows it for
+# someone logged in at the Pi's own screen (fails with br-connection-profile-unavailable)
+WP=~/.config/wireplumber/wireplumber.conf.d
+if [ ! -f "$WP/80-bluetooth-headless.conf" ]; then
+    mkdir -p "$WP"
+    cp system/80-bluetooth-headless.conf "$WP/"
+    systemctl --user restart wireplumber || true
+fi
+
+# systemd user service (start it with: systemctl --user enable --now halloween)
+mkdir -p ~/.config/systemd/user cache
+cp halloween.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+
+echo
+echo "Setup done. Next: ./make_sounds.sh, pair the speaker, then"
+echo "  systemctl --user enable --now halloween"

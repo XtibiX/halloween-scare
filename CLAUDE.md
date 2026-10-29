@@ -36,12 +36,13 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 - `cache/`: rendered speech (safe to delete)
 
 ## Setup (fresh Pi)
-1. `sudo apt install -y python3-picamera2 python3-numpy python3-flask espeak-ng sox pipewire pipewire-audio wireplumber libspa-0.2-bluetooth`
+Full user-facing steps are in README.md; keep both in sync.
+1. `sudo apt install -y git curl python3-venv python3-picamera2 python3-numpy python3-flask python3-pil sox pipewire pipewire-audio wireplumber libspa-0.2-bluetooth`
 2. `./setup.sh` (venv + Piper + voice download), then `./make_sounds.sh` (starter sounds)
 3. `sudo loginctl enable-linger normann`
 4. Bluetooth: `sudo rfkill unblock bluetooth` (blocked by default), then `bluetoothctl power on`.
    WirePlumber 0.5 disables Bluetooth audio without a local login seat (SSH/service), so
-   `~/.config/wireplumber/wireplumber.conf.d/80-bluetooth-headless.conf` sets
+   `system/80-bluetooth-headless.conf` (installed by setup.sh into `~/.config/wireplumber/wireplumber.conf.d/`) sets
    `monitor.bluez.seat-monitoring = disabled`. Without it: `br-connection-profile-unavailable`.
 5. Pair the speaker with `bluetoothctl` (pair, trust, connect) and put its MAC in `config.toml`.
    Current speaker: MEGABOOM 3, `AA:BB:CC:DD:EE:FF`
