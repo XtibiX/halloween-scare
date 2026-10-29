@@ -37,7 +37,7 @@ class Speaker:
         self.cache_dir.mkdir(exist_ok=True)
         self._lock = threading.Lock()
         self._render_lock = threading.Lock()
-        self._unused = []
+        self._unused = {}  # mode -> messages not yet used this round
         self._connected = None
         self._connected_checked = 0.0
         self._ambient_on = False
@@ -52,26 +52,26 @@ class Speaker:
     def mode_dir(self, mode=None):
         return self.root / "modes" / (mode or self.mode)
 
-    @property
-    def scare_dir(self):
-        return self.mode_dir() / "scare"
+    def sound_dir(self, kind, mode=None):
+        if kind not in ("scare", "ambient"):
+            raise ValueError("kind must be scare or ambient")
+        return self.mode_dir(mode) / kind
 
-    @property
-    def ambient_dir(self):
-        return self.mode_dir() / "ambient"
+    def messages_file(self, mode=None):
+        return self.mode_dir(mode) / "messages.txt"
 
-    @property
-    def messages_file(self):
-        return self.mode_dir() / "messages.txt"
-
-    def set_mode(self, mode):
+    def check_mode(self, mode):
         if mode not in self.modes:
             raise ValueError(f"unknown mode {mode!r}")
+        return mode
+
+    def set_mode(self, mode):
+        """The base mode: used for the ambient loop and scares without an explicit mode."""
+        self.check_mode(mode)
         if mode == self.mode:
             return
         log.info("Mode: %s", self.modes[mode]["label"])
         self.mode = mode
-        self._unused = []
         # Switch the background sound right away instead of after the current file
         proc = self._ambient_proc
         if proc and proc.poll() is None:
@@ -109,18 +109,19 @@ class Speaker:
 
     def messages(self, mode=None):
         try:
-            lines = (self.mode_dir(mode) / "messages.txt").read_text().splitlines()
+            lines = self.messages_file(mode).read_text().splitlines()
         except FileNotFoundError:
             return []
         return [l.strip() for l in lines if l.strip() and not l.lstrip().startswith("#")]
 
-    def next_message(self):
+    def next_message(self, mode):
         """Random message, without repeats until all have been used."""
-        current = self.messages()
-        self._unused = [m for m in self._unused if m in current]
-        if not self._unused:
-            self._unused = random.sample(current, len(current))
-        return self._unused.pop() if self._unused else None
+        current = self.messages(mode)
+        unused = [m for m in self._unused.get(mode, []) if m in current]
+        if not unused:
+            unused = random.sample(current, len(current))
+        self._unused[mode] = unused
+        return unused.pop() if unused else None
 
     @staticmethod
     def _sound_files(folder):
@@ -128,11 +129,11 @@ class Speaker:
             return []
         return sorted(p for p in folder.iterdir() if p.suffix.lower() in SOUND_TYPES)
 
-    def scare_sounds(self):
-        return self._sound_files(self.scare_dir)
+    def scare_sounds(self, mode=None):
+        return self._sound_files(self.sound_dir("scare", mode))
 
-    def ambient_sounds(self):
-        return self._sound_files(self.ambient_dir)
+    def ambient_sounds(self, mode=None):
+        return self._sound_files(self.sound_dir("ambient", mode))
 
     # --- Speech --------------------------------------------------------------
 
@@ -204,7 +205,8 @@ class Speaker:
         threading.Thread(target=work, daemon=True).start()
 
     def pending_messages(self):
-        return sum(1 for m in self.messages() if not self._speech_path(m, self.mode).exists())
+        return sum(1 for mode in self.modes for m in self.messages(mode)
+                   if not self._speech_path(m, mode).exists())
 
     def silence_file(self):
         """Bluetooth speakers often swallow the first half second after being
@@ -227,19 +229,19 @@ class Speaker:
         except subprocess.TimeoutExpired:
             proc.kill()
 
-    def scare(self, text=None):
+    def scare(self, text=None, mode=None):
+        mode = self.check_mode(mode or self.mode)
         if not self._lock.acquire(blocking=False):
             return False
-        threading.Thread(target=self._run, args=(text,), daemon=True).start()
+        threading.Thread(target=self._run, args=(text, mode), daemon=True).start()
         return True
 
-    def _run(self, text):
+    def _run(self, text, mode):
         try:
             self.ensure_connected()
-            mode = self.mode
-            text = text or self.next_message()
+            text = text or self.next_message(mode)
             speech = self.speech_file(text, mode) if text else None
-            sounds = self.scare_sounds()
+            sounds = self.scare_sounds(mode)
             if not self._ambient_on:
                 self.play(self.silence_file())
             if sounds:

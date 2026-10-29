@@ -5,7 +5,10 @@ Wants=pipewire.service wireplumber.service
 
 [Service]
 WorkingDirectory=%h/halloween
-ExecStart=%h/halloween/.venv/bin/python -m scare.main
+ExecStart=%h/halloween/.venv/bin/python -u -m scare.main
+# The user journal isn't available on this Pi, so log to a file
+StandardOutput=append:%h/halloween/cache/app.log
+StandardError=inherit
 Restart=on-failure
 RestartSec=5
 

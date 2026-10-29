@@ -47,6 +47,17 @@ effects = "gain -3 rate 44100 reverb 15"
 length_scale = 1.2
 sentence_silence = 0.35
 
+# Auto mode: per scare, picks kid_mode if anyone looks shorter than
+# kid_height_cm (or if nobody is seen clearly), otherwise adult_mode.
+# Needs one calibration on the web page: a person of known height standing
+# where visitors usually stand (the doormat).
+[auto]
+model = "models/yolox_nano.onnx"
+kid_mode = "kids"
+adult_mode = "scary"
+kid_height_cm = 130
+look_seconds = 1.5          # how long to look at the visitors before deciding
+
 [camera]
 width = 640
 height = 480

@@ -17,6 +17,9 @@
   .view { position:relative; aspect-ratio:4/3; background:#000; border-radius:8px; overflow:hidden;
           display:flex; align-items:center; justify-content:center; color:var(--dim); text-align:center; }
   .view img { width:100%; height:100%; object-fit:cover; }
+  .view canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .tab { flex:1; min-width:120px; border:2px solid transparent; }
+  .tab.active { border-color:var(--orange); color:var(--orange); }
   .meter { height:8px; background:#000; border-radius:4px; margin-top:10px; position:relative; overflow:hidden; }
   .meter > div { height:100%; background:var(--green); width:0; transition:width .3s; }
   .meter > i { position:absolute; top:0; bottom:0; width:2px; background:var(--red); }
@@ -45,10 +48,26 @@
 <body>
 <main>
   <h1>🎃 Halloween Scare</h1>
+  <p class="note warn" id="offline" hidden>Lost contact with the Pi. Reload the page.</p>
 
   <section class="card">
     <h2>Mode</h2>
     <div class="row" id="modeButtons"></div>
+  </section>
+
+  <section class="card" id="autoCard" hidden>
+    <h2>Auto mode</h2>
+    <p class="note" style="margin-top:0">Plays the kid-friendly mode if anyone looks shorter than the limit,
+      or if it can't see anyone clearly. Otherwise plays the scary mode.</p>
+    <label>Kid height limit: <b id="vKid"></b> cm</label>
+    <input type="range" id="kid_height_cm" min="90" max="170" step="5">
+    <label for="calHeight">Calibrate: one person stands where visitors stand (head to feet in view), enter their height</label>
+    <div class="row">
+      <input type="text" id="calHeight" inputmode="decimal" placeholder="Your height, e.g. 180 or 1,80" style="flex:1">
+      <button id="calBtn">Calibrate</button>
+    </div>
+    <p class="note" id="calNote"></p>
+    <p class="note">Last decision: <b id="lastAuto">–</b></p>
   </section>
 
   <section class="card">
@@ -87,6 +106,11 @@
     <input type="range" id="volume" min="0" max="1.5" step="0.05">
     <label>Background sound volume: <b id="vAmb"></b>%</label>
     <input type="range" id="ambient_volume" min="0" max="1" step="0.05">
+  </section>
+
+  <section class="card">
+    <h2>Edit content for</h2>
+    <div class="row" id="editTabs"></div>
   </section>
 
   <section class="card">
@@ -129,6 +153,7 @@ const sliders = {
   cooldown_seconds: v => $("vCool").textContent = v,
   volume: v => $("vVol").textContent = Math.round(v * 100),
   ambient_volume: v => $("vAmb").textContent = Math.round(v * 100),
+  kid_height_cm: v => $("vKid").textContent = v,
 };
 for (const [name, show] of Object.entries(sliders)) {
   const el = $(name);
@@ -139,7 +164,7 @@ for (const [name, show] of Object.entries(sliders)) {
 }
 
 function soundList(listEl, kind, names) {
-  const key = names.join("|");
+  const key = editMode + ":" + names.join("|");
   if (listEl.dataset.key === key) return;
   listEl.dataset.key = key;
   listEl.innerHTML = names.length ? "" : '<li class="note">No sounds yet</li>';
@@ -147,7 +172,7 @@ function soundList(listEl, kind, names) {
     const li = document.createElement("li");
     const span = document.createElement("span"); span.textContent = name;
     const play = document.createElement("button"); play.textContent = "▶";
-    const url = `/sounds/${kind}/${encodeURIComponent(name)}`;
+    const url = `/sounds/${editMode}/${kind}/${encodeURIComponent(name)}`;
     play.onclick = () => new Audio(url).play();
     play.title = "Preview on this device";
     const del = document.createElement("button"); del.textContent = "Delete";
@@ -159,28 +184,61 @@ function soundList(listEl, kind, names) {
   }
 }
 
-const MODE_ICONS = {scary: "💀", kids: "👻"};
-let shownMode = null;
+const MODE_ICONS = {scary: "💀", kids: "👻", auto: "🎯"};
+let editMode = null, shownEditMode = null;
 
-function renderModes(s) {
-  const box = $("modeButtons");
-  const key = Object.keys(s.modes || {}).join("|") + ":" + s.mode;
+function buttons(box, items, active, cls, onPick) {
+  const key = Object.keys(items).join("|") + ":" + active;
   if (box.dataset.key === key) return;
   box.dataset.key = key;
   box.innerHTML = "";
-  for (const [name, label] of Object.entries(s.modes || {})) {
+  for (const [name, label] of Object.entries(items)) {
     const b = document.createElement("button");
-    b.className = "mode" + (name === s.mode ? " active" : "");
+    b.className = cls + (name === active ? " active" : "");
     b.textContent = `${MODE_ICONS[name] || "🎃"} ${label}`;
-    b.onclick = async () => { state = await api("/api/settings", {mode: name}); render(); };
+    b.onclick = () => onPick(name);
     box.append(b);
   }
-  $("msgMode").textContent = s.modes[s.mode];
-  // The message editor and sound lists follow the active mode
-  if (shownMode !== s.mode) {
-    shownMode = s.mode;
+}
+
+function renderModes(s) {
+  buttons($("modeButtons"), s.modes, s.mode, "mode", async name => {
+    state = await api("/api/settings", {mode: name});
+    if (name !== "auto") editMode = name;  // edit what you just switched to
+    render();
+  });
+  $("autoCard").hidden = s.mode !== "auto";
+  if (Date.now() > calMessageUntil) {
+    $("calNote").textContent = s.cm_per_px ? "Calibrated ✓" : "Not calibrated yet: Auto will always pick kid-friendly.";
+  }
+  const la = s.last_auto;
+  $("lastAuto").textContent = la ? `${la.at}: ${s.modes[la.mode]} (${la.why})` : "–";
+
+  // Messages and sounds editor: any mode, independent of what is playing
+  if (!editMode) editMode = s.base_mode;
+  buttons($("editTabs"), s.content_modes, editMode, "tab", name => { editMode = name; render(); });
+  $("msgMode").textContent = s.content_modes[editMode];
+  if (shownEditMode !== editMode) {
+    shownEditMode = editMode;
     $("msgNote").textContent = "";
-    api("/api/messages").then(r => $("messages").value = r.text);
+    api(`/api/messages?mode=${editMode}`).then(r => $("messages").value = r.text);
+  }
+}
+
+function drawPeople(s) {
+  const c = $("overlay");
+  if (!c) return;
+  const w = c.width = c.clientWidth, h = c.height = c.clientHeight;
+  const g = c.getContext("2d");
+  g.clearRect(0, 0, w, h);
+  g.lineWidth = 3; g.font = "bold 15px system-ui, sans-serif";
+  for (const p of s.people || []) {
+    const [x1, y1, x2, y2] = p.box;
+    const kid = p.height_cm !== null && p.height_cm < s.kid_height_cm;
+    g.strokeStyle = g.fillStyle = p.height_cm === null ? "#a596b3" : kid ? "#ffd23f" : "#4cd38a";
+    g.strokeRect(x1 * w, y1 * h, (x2 - x1) * w, (y2 - y1) * h);
+    const label = p.height_cm === null ? "person" : `${p.height_cm} cm${p.cut ? "?" : ""}`;
+    g.fillText(label, x1 * w + 4, Math.max(16, y1 * h - 4));
   }
 }
 
@@ -188,7 +246,8 @@ function render() {
   const s = state;
   renderModes(s);
   if (s.camera && !streamStarted) {
-    $("view").innerHTML = '<img src="/stream.mjpg" alt="Camera">'; streamStarted = true;
+    $("view").innerHTML = '<img src="/stream.mjpg" alt="Camera"><canvas id="overlay"></canvas>';
+    streamStarted = true;
   } else if (!s.camera) {
     $("view").innerHTML = `<span>No camera<br><small>${s.camera_error || ""}</small></span>`;
   }
@@ -214,26 +273,52 @@ function render() {
   for (const [name, show] of Object.entries(sliders)) {
     if (dragging !== name) { $(name).value = s[name]; show(s[name]); }
   }
-  soundList($("scareList"), "scare", s.scare_sounds || []);
-  soundList($("ambientList"), "ambient", s.ambient_sounds || []);
+  const sounds = (s.sounds || {})[editMode] || {};
+  soundList($("scareList"), "scare", sounds.scare || []);
+  soundList($("ambientList"), "ambient", sounds.ambient || []);
+  drawPeople(s);
 }
 
 async function poll() {
-  try { state = await api("/api/status"); render(); } catch (e) {}
+  try {
+    state = await api("/api/status"); render();
+    $("offline").hidden = true;
+  } catch (e) {
+    $("offline").hidden = false;
+    console.error(e);
+  }
 }
 
 $("armBtn").onclick = async () => { state = await api("/api/arm", {armed: !state.armed}); render(); };
 $("scareBtn").onclick = () => api("/api/test", {}).then(poll);
 $("sayBtn").onclick = () => api("/api/test", {text: $("sayText").value}).then(poll);
 $("saveMsgBtn").onclick = async () => {
-  const r = await api("/api/messages", {text: $("messages").value});
+  const r = await api(`/api/messages?mode=${editMode}`, {text: $("messages").value});
   $("msgNote").textContent = `Saved ${r.count} messages`; poll();
+};
+let calMessageUntil = 0;
+function calMessage(text) {
+  $("calNote").textContent = text;
+  calMessageUntil = Date.now() + 15000;  // keep it visible over the status refresh
+}
+$("calBtn").onclick = async () => {
+  // Accepts "180", "180 cm", "1,80" and "1.80"
+  let v = parseFloat($("calHeight").value.replace(",", "."));
+  if (v > 0 && v < 3) v *= 100;
+  const cm = Math.round(v);
+  if (!(cm >= 100 && cm <= 220)) { calMessage("Enter your height, e.g. 180 or 1,80"); return; }
+  $("calBtn").disabled = true; calMessage(`Looking for a ${cm} cm person… stand still`);
+  const r = await api("/api/calibrate", {height_cm: cm});
+  $("calBtn").disabled = false;
+  if (r.error) { calMessage(r.error); return; }
+  state = r.status; render();
+  calMessage(`Calibrated ✓ (${cm} cm = ${r.px} px). Walk around to check the heights on the video.`);
 };
 for (const kind of ["scare", "ambient"]) {
   $(kind + "Upload").onchange = async e => {
     const form = new FormData();
     for (const f of e.target.files) form.append("files", f);
-    await fetch(`/api/sounds/${kind}`, {method: "POST", body: form});
+    await fetch(`/api/sounds/${editMode}/${kind}`, {method: "POST", body: form});
     e.target.value = ""; poll();
   };
 }

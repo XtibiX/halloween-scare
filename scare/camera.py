@@ -50,6 +50,10 @@ class Camera:
         yuv = self.picam2.capture_array("lores")
         return yuv[:h, :w]
 
+    def rgb_frame(self):
+        """Full-size frame as an RGB array (XBGR8888 is [R, G, B, 255] per pixel)."""
+        return self.picam2.capture_array("main")[:, :, :3]
+
     def snapshot(self, path):
         self.picam2.capture_file(str(path))
 

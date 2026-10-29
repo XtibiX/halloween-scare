@@ -22,6 +22,11 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 - `config.toml`: startup defaults. `settings.json`: values changed on the web page (overrides config)
 - Modes (switched on the web page, defined under `[modes.*]` in `config.toml` with label and voice effects):
   `scary` (Skummel) and `kids` (Barnevennlig, silly not frightening, for small children)
+- Auto mode (`[auto]` in config, `scare/people.py`): on each scare, YOLOX-nano (`models/yolox_nano.onnx`,
+  onnxruntime, ~0.2 s/frame, loaded on first use) looks at the visitors for 1.5 s; if anyone is shorter
+  than `kid_height_cm` (130), or nobody is seen clearly, or it isn't calibrated, it plays the kid mode,
+  else the scary mode. Always fail towards kid mode. Height = box pixels × `cm_per_px`, calibrated on the
+  web page with one person of known height on the doormat (assumes visitors stand at roughly that distance).
 - `modes/<mode>/messages.txt`: one Norwegian message per line
 - `modes/<mode>/scare/`: played before each message. `modes/<mode>/ambient/`: background loop
 - `make_sounds.sh` regenerates the starter sounds for both modes
@@ -41,6 +46,6 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 
 ## Running
 - Manually: `.venv/bin/python -m scare.main` (from this folder)
-- Service logs: `journalctl --user -u halloween -f`
+- Service: `systemctl --user restart halloween` (or stop/status). Logs: `tail -f cache/app.log` (no user journal on this Pi)
 - Web: `http://haloween-pi.local:8000` (hostname really is spelled `haloween-pi`)
 - The app keeps running without a camera so audio and the web page can be tested alone.
