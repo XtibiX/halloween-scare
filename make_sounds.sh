@@ -34,9 +34,18 @@ sox -n $R $S/ghost-woo.wav synth 2.4 sine 300:520 sine 304:524 remix - \
 # cartoon boing
 sox -n $R $S/boing.wav synth 0.7 sine 120:700 tremolo 16 70 fade 0 0.7 0.5 \
     reverb 20 gain -n -4
-# playful spooky organ chord (A minor, rising)
-sox -n $R $S/organ.wav synth 0.5 sine 220 sine 261.6 sine 329.6 remix - gain -10 \
-    pad 0 0.05 repeat 2 pad 0 1 reverb 60 fade 0.02 2.6 0.8 gain -n -4
+# playful spooky organ: A minor notes rising, then the chord held. Every note
+# fades in and out so there are no clicks between them.
+T2=$(mktemp -d cache/organ.XXXX)
+for f in 220 261.6 329.6; do
+    sox -n $R $T2/n$f.wav synth 0.42 sine $f sine $((${f%.*} * 2)) remix - gain -12 \
+        fade h 0.04 0.42 0.12
+done
+sox -n $R $T2/chord.wav synth 1.4 sine 220 sine 261.6 sine 329.6 remix - gain -14 \
+    fade h 0.05 1.4 0.9
+sox $T2/n220.wav $T2/n261.6.wav $T2/n329.6.wav $T2/chord.wav $S/organ.wav \
+    pad 0 0.8 reverb 50 gain -n -6
+rm -rf "$T2"
 rm -f $A/crickets.wav $A/breeze.wav  # replaced by the two files below
 T=$(mktemp -d cache/sounds.XXXX)
 
