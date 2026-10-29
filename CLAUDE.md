@@ -29,7 +29,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
   than `kid_height_cm` (130), or nobody is seen clearly, or it isn't calibrated, it plays the kid mode,
   else the scary mode. Always fail towards kid mode. Height = box pixels × `cm_per_px`, calibrated on the
   web page with one person of known height on the doormat (assumes visitors stand at roughly that distance).
-- `modes/<mode>/messages.txt`: one Norwegian message per line
+- `modes/<mode>/messages.txt`: one message per line (scary: English, kids: Norwegian). Norwegian lines must
+  not use English words like "Halloween": the Norwegian voice mispronounces them. Use "kveld"/"aften".
 - `modes/<mode>/scare/`: played before each message. `modes/<mode>/ambient/`: background loop
 - `make_sounds.sh` regenerates the starter sounds for both modes
 - `cache/`: rendered speech (safe to delete)
