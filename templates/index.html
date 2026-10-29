@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halloween Scare</title>
+<style>
+  :root { --bg:#120d16; --card:#1f1726; --line:#3a2b45; --text:#eee6f3; --dim:#a596b3;
+          --orange:#ff7a1a; --green:#4cd38a; --red:#ff4d6d; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--text);
+         font:15px/1.4 system-ui, sans-serif; }
+  main { max-width:720px; margin:0 auto; display:grid; gap:14px; }
+  h1 { margin:0; font-size:22px; color:var(--orange); }
+  h2 { margin:0 0 10px; font-size:15px; color:var(--dim); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .view { position:relative; aspect-ratio:4/3; background:#000; border-radius:8px; overflow:hidden;
+          display:flex; align-items:center; justify-content:center; color:var(--dim); text-align:center; }
+  .view img { width:100%; height:100%; object-fit:cover; }
+  .meter { height:8px; background:#000; border-radius:4px; margin-top:10px; position:relative; overflow:hidden; }
+  .meter > div { height:100%; background:var(--green); width:0; transition:width .3s; }
+  .meter > i { position:absolute; top:0; bottom:0; width:2px; background:var(--red); }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:8px; margin-top:10px; }
+  .stats div { font-size:13px; color:var(--dim); } .stats b { display:block; color:var(--text); font-size:15px; }
+  button { font:inherit; border:0; border-radius:10px; padding:12px 16px; cursor:pointer; color:#fff; background:var(--line); }
+  button.big { flex:1; min-width:140px; font-size:17px; font-weight:600; }
+  .scare { background:var(--orange); color:#1a0f00; }
+  .armed { background:var(--green); color:#00210f; } .disarmed { background:var(--red); }
+  .mode { flex:1; min-width:140px; font-size:17px; font-weight:600; border:2px solid transparent; }
+  .mode.active { background:#3d2550; border-color:var(--orange); color:var(--orange); }
+  button:disabled { opacity:.5; }
+  label { display:block; margin:12px 0 4px; color:var(--dim); font-size:13px; }
+  input[type=range] { width:100%; accent-color:var(--orange); }
+  input[type=text], textarea { width:100%; font:inherit; color:var(--text); background:#0d0910;
+          border:1px solid var(--line); border-radius:8px; padding:10px; }
+  textarea { min-height:220px; resize:vertical; }
+  ul { list-style:none; margin:0; padding:0; } li { display:flex; gap:8px; align-items:center; padding:4px 0; }
+  li span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  li button { padding:6px 10px; font-size:13px; }
+  .note { color:var(--dim); font-size:13px; margin-top:6px; }
+  .warn { color:var(--orange); }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎃 Halloween Scare</h1>
+
+  <section class="card">
+    <h2>Mode</h2>
+    <div class="row" id="modeButtons"></div>
+  </section>
+
+  <section class="card">
+    <div class="view" id="view"><span>Loading camera…</span></div>
+    <div class="meter" title="Motion level vs trigger level"><div id="meterBar"></div><i id="meterMark"></i></div>
+    <div class="stats">
+      <div>Motion<b id="sMotion">–</b></div>
+      <div>Speaker<b id="sSpeaker">–</b></div>
+      <div>Last scare<b id="sLast">–</b></div>
+      <div>Scares tonight<b id="sCount">0</b></div>
+    </div>
+    <p class="note warn" id="sWarn" hidden></p>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <button class="big" id="armBtn">…</button>
+      <button class="big scare" id="scareBtn">👻 Scare now</button>
+    </div>
+    <label for="sayText">Say something now (leave empty for a random message)</label>
+    <div class="row">
+      <input type="text" id="sayText" placeholder="Jeg ser deg…" style="flex:1">
+      <button id="sayBtn">Say</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Tuning</h2>
+    <label>Trigger when <b id="vArea"></b>% of the picture changes (lower = more sensitive)</label>
+    <input type="range" id="area_percent" min="0.2" max="20" step="0.1">
+    <label>Pixel change needed: <b id="vPix"></b> (raise if shadows or noise trigger it)</label>
+    <input type="range" id="pixel_threshold" min="5" max="80" step="1">
+    <label>Wait between scares: <b id="vCool"></b> s</label>
+    <input type="range" id="cooldown_seconds" min="0" max="120" step="1">
+    <label>Scare volume: <b id="vVol"></b>%</label>
+    <input type="range" id="volume" min="0" max="1.5" step="0.05">
+    <label>Background sound volume: <b id="vAmb"></b>%</label>
+    <input type="range" id="ambient_volume" min="0" max="1" step="0.05">
+  </section>
+
+  <section class="card">
+    <h2>Messages: <span id="msgMode"></span></h2>
+    <textarea id="messages" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="saveMsgBtn">Save messages</button>
+      <span class="note" id="msgNote"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Scare sounds</h2>
+    <ul id="scareList"></ul>
+    <input type="file" id="scareUpload" accept=".wav,.ogg,.mp3,.flac,audio/*" multiple hidden>
+    <button onclick="scareUpload.click()">Upload scare sounds</button>
+    <p class="note">One is picked at random before each message: screams, growls, thunder, creaks.</p>
+  </section>
+
+  <section class="card">
+    <h2>Background sounds</h2>
+    <ul id="ambientList"></ul>
+    <input type="file" id="ambientUpload" accept=".wav,.ogg,.mp3,.flac,audio/*" multiple hidden>
+    <button onclick="ambientUpload.click()">Upload background sounds</button>
+    <p class="note">Loops quietly all the time: wind, heartbeat, distant moaning.</p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const api = (path, body, method) => fetch(path, body === undefined && !method ? {} : {
+  method: method || "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})
+}).then(r => r.json());
+
+let state = {}, streamStarted = false, dragging = null;
+
+const sliders = {
+  area_percent: v => $("vArea").textContent = (+v).toFixed(1),
+  pixel_threshold: v => $("vPix").textContent = v,
+  cooldown_seconds: v => $("vCool").textContent = v,
+  volume: v => $("vVol").textContent = Math.round(v * 100),
+  ambient_volume: v => $("vAmb").textContent = Math.round(v * 100),
+};
+for (const [name, show] of Object.entries(sliders)) {
+  const el = $(name);
+  el.addEventListener("input", () => { dragging = name; show(el.value); });
+  el.addEventListener("change", async () => {
+    state = await api("/api/settings", {[name]: +el.value}); dragging = null; render();
+  });
+}
+
+function soundList(listEl, kind, names) {
+  const key = names.join("|");
+  if (listEl.dataset.key === key) return;
+  listEl.dataset.key = key;
+  listEl.innerHTML = names.length ? "" : '<li class="note">No sounds yet</li>';
+  for (const name of names) {
+    const li = document.createElement("li");
+    const span = document.createElement("span"); span.textContent = name;
+    const play = document.createElement("button"); play.textContent = "▶";
+    const url = `/sounds/${kind}/${encodeURIComponent(name)}`;
+    play.onclick = () => new Audio(url).play();
+    play.title = "Preview on this device";
+    const del = document.createElement("button"); del.textContent = "Delete";
+    del.onclick = async () => {
+      if (del.dataset.sure) { await api(url.replace("/sounds/", "/api/sounds/"), null, "DELETE"); poll(); }
+      else { del.dataset.sure = 1; del.textContent = "Sure?"; setTimeout(() => { delete del.dataset.sure; del.textContent = "Delete"; }, 3000); }
+    };
+    li.append(span, play, del); listEl.append(li);
+  }
+}
+
+const MODE_ICONS = {scary: "💀", kids: "👻"};
+let shownMode = null;
+
+function renderModes(s) {
+  const box = $("modeButtons");
+  const key = Object.keys(s.modes || {}).join("|") + ":" + s.mode;
+  if (box.dataset.key === key) return;
+  box.dataset.key = key;
+  box.innerHTML = "";
+  for (const [name, label] of Object.entries(s.modes || {})) {
+    const b = document.createElement("button");
+    b.className = "mode" + (name === s.mode ? " active" : "");
+    b.textContent = `${MODE_ICONS[name] || "🎃"} ${label}`;
+    b.onclick = async () => { state = await api("/api/settings", {mode: name}); render(); };
+    box.append(b);
+  }
+  $("msgMode").textContent = s.modes[s.mode];
+  // The message editor and sound lists follow the active mode
+  if (shownMode !== s.mode) {
+    shownMode = s.mode;
+    $("msgNote").textContent = "";
+    api("/api/messages").then(r => $("messages").value = r.text);
+  }
+}
+
+function render() {
+  const s = state;
+  renderModes(s);
+  if (s.camera && !streamStarted) {
+    $("view").innerHTML = '<img src="/stream.mjpg" alt="Camera">'; streamStarted = true;
+  } else if (!s.camera) {
+    $("view").innerHTML = `<span>No camera<br><small>${s.camera_error || ""}</small></span>`;
+  }
+  const max = Math.max(10, s.area_percent * 3);
+  $("meterBar").style.width = Math.min(100, s.motion_level / max * 100) + "%";
+  $("meterBar").style.background = s.motion_level >= s.area_percent ? "var(--red)" : "var(--green)";
+  $("meterMark").style.left = (s.area_percent / max * 100) + "%";
+  $("sMotion").textContent = s.camera ? s.motion_level.toFixed(1) + " %" : "–";
+  $("sSpeaker").textContent = s.speaker_connected === null ? "Default output"
+    : s.speaker_connected ? "Connected" : "Not connected";
+  $("sLast").textContent = s.last_scare_at ? `${s.last_scare_at} (${s.last_scare_reason})` : "–";
+  $("sCount").textContent = s.scare_count;
+
+  const warn = [];
+  if (s.messages_pending) warn.push(`Preparing ${s.messages_pending} message(s)…`);
+  if (s.playing) warn.push("Playing…");
+  else if (s.cooldown_left) warn.push(`Cooldown ${s.cooldown_left}s`);
+  $("sWarn").textContent = warn.join(" · "); $("sWarn").hidden = !warn.length;
+
+  $("armBtn").textContent = s.armed ? "Armed: tap to disarm" : "Disarmed: tap to arm";
+  $("armBtn").className = "big " + (s.armed ? "armed" : "disarmed");
+  $("scareBtn").disabled = $("sayBtn").disabled = s.playing;
+  for (const [name, show] of Object.entries(sliders)) {
+    if (dragging !== name) { $(name).value = s[name]; show(s[name]); }
+  }
+  soundList($("scareList"), "scare", s.scare_sounds || []);
+  soundList($("ambientList"), "ambient", s.ambient_sounds || []);
+}
+
+async function poll() {
+  try { state = await api("/api/status"); render(); } catch (e) {}
+}
+
+$("armBtn").onclick = async () => { state = await api("/api/arm", {armed: !state.armed}); render(); };
+$("scareBtn").onclick = () => api("/api/test", {}).then(poll);
+$("sayBtn").onclick = () => api("/api/test", {text: $("sayText").value}).then(poll);
+$("saveMsgBtn").onclick = async () => {
+  const r = await api("/api/messages", {text: $("messages").value});
+  $("msgNote").textContent = `Saved ${r.count} messages`; poll();
+};
+for (const kind of ["scare", "ambient"]) {
+  $(kind + "Upload").onchange = async e => {
+    const form = new FormData();
+    for (const f of e.target.files) form.append("files", f);
+    await fetch(`/api/sounds/${kind}`, {method: "POST", body: form});
+    e.target.value = ""; poll();
+  };
+}
+
+poll(); setInterval(poll, 1500);
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[Unit]
+Description=Halloween scare prop
+After=pipewire.service wireplumber.service
+Wants=pipewire.service wireplumber.service
+
+[Service]
+WorkingDirectory=%h/halloween
+ExecStart=%h/halloween/.venv/bin/python -m scare.main
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,57 @@
+# Startup defaults. Values changed on the web page are saved to settings.json
+# and override these. Delete settings.json to go back to these defaults.
+
+[speaker]
+# Bluetooth MAC of the speaker, e.g. "AA:BB:CC:DD:EE:FF". Leave empty to just
+# play on whatever the default audio output is.
+mac = "AA:BB:CC:DD:EE:FF"
+volume = 0.9                # scare sounds and voice, 0.0 - 1.5
+ambient_volume = 0.25       # background loop, 0 = off
+
+[motion]
+start_armed = true
+pixel_threshold = 25        # how much a pixel must change (0-255) to count
+area_percent = 1.5          # % of the picture that must change to trigger
+frames_required = 3         # consecutive frames of motion (filters flicker)
+cooldown_seconds = 20       # minimum time between scares
+
+[voice]
+# Piper neural voice (Norwegian Bokmål), downloaded by setup.sh
+model = "voices/no_NO-talesyntese-medium.onnx"
+
+# Each mode has its own folder in modes/<name>/ with messages.txt, scare/
+# (played before each message) and ambient/ (quiet background loop).
+# `effects` are sox effects for the voice; empty string = natural voice.
+# Optional Piper settings per mode:
+#   length_scale      speaking speed, >1 = slower (1.0 = normal). Much more
+#                     natural than slowing down with sox `tempo`.
+#   sentence_silence  seconds of pause between sentences
+#   noise_scale       voice variation (default 0.667), higher = rougher, more uneven
+#   noise_w           rhythm variation (default 0.8), higher = more irregular pacing
+[modes]
+default = "scary"
+
+[modes.scary]
+label = "Skummel"
+# angry old troll: lower, gravelly, trembling, uneven pacing
+effects = "gain -8 rate 44100 pitch -180 overdrive 14 tremolo 5 20 reverb 40 echo 0.8 0.7 90 0.25 gain -n -3"
+length_scale = 1.2
+sentence_silence = 0.4
+noise_scale = 0.85
+noise_w = 1.0
+
+[modes.kids]
+label = "Barnevennlig"
+# natural voice, calm pace, very light room echo (pitching up sounds robotic)
+effects = "gain -3 rate 44100 reverb 15"
+length_scale = 1.2
+sentence_silence = 0.35
+
+[camera]
+width = 640
+height = 480
+fps = 10
+
+[web]
+host = "0.0.0.0"
+port = 8000
