@@ -1,13 +1,14 @@
-# Én melding per linje. Linjer som starter med # blir ignorert.
-Velkommen, dødelige. Vi har ventet på deg.
-Snu, mens du fortsatt kan.
-Jeg ser deg. Jeg ser deg alltid.
-God Halloween. Gi meg godteriet ditt. Nå.
-Du ser deilig ut i kveld.
-Hvem våger å forstyrre søvnen min?
-Ikke se deg bak.
-Kom nærmere. Nærmere. Bare litt nærmere.
-Ett skritt til, og du er min for alltid.
-De døde er urolige i natt.
-Knask eller knep? Jeg velger knask. Deg.
-Ingen som har gått inn her, har kommet ut igjen.
+# One message per line, in English (this mode uses an English voice).
+# Lines starting with # are ignored. Short, angry lines ending in ! suit the troll voice.
+Who dares to stomp on my doorstep? Go away!
+A hundred years I have waited. And now YOU come?
+Turn back! While you still can!
+I see you. I always see you.
+Trick or treat? I choose treat. And the treat is YOU!
+You look delicious tonight.
+Who dares to wake me from my sleep?
+Don't look behind you!
+Come closer. Closer. Just a little closer.
+One more step, and you are mine forever!
+The dead are restless tonight. And so am I!
+Nobody who came in here ever came out again.

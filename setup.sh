@@ -10,12 +10,17 @@ if [ ! -d .venv ]; then
 fi
 .venv/bin/pip install --upgrade piper-tts
 
-VOICE=no_NO-talesyntese-medium
-URL=https://huggingface.co/rhasspy/piper-voices/resolve/main/no/no_NO/talesyntese/medium
+# Piper voices: Norwegian (kids mode, default) and British English (scary mode)
+BASE=https://huggingface.co/rhasspy/piper-voices/resolve/main
 mkdir -p voices
-for f in "$VOICE.onnx" "$VOICE.onnx.json"; do
-    [ -s "voices/$f" ] || curl -fL --retry 3 -o "voices/$f" "$URL/$f"
+for v in no/no_NO/talesyntese/medium/no_NO-talesyntese-medium \
+         en/en_GB/alan/medium/en_GB-alan-medium; do
+    for ext in onnx onnx.json; do
+        f=voices/$(basename "$v").$ext
+        [ -s "$f" ] || curl -fL --retry 3 -o "$f" "$BASE/$v.$ext"
+    done
 done
+VOICE=no_NO-talesyntese-medium
 
 # Person detector for Auto mode (YOLOX-nano, ~4 MB)
 mkdir -p models

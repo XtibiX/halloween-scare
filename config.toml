@@ -16,7 +16,8 @@ frames_required = 3         # consecutive frames of motion (filters flicker)
 cooldown_seconds = 20       # minimum time between scares
 
 [voice]
-# Piper neural voice (Norwegian Bokmål), downloaded by setup.sh
+# Default Piper neural voice (Norwegian Bokmål), downloaded by setup.sh.
+# A mode can set its own `model` (and so its own language).
 model = "voices/no_NO-talesyntese-medium.onnx"
 
 # Each mode has its own folder in modes/<name>/ with messages.txt, scare/
@@ -33,6 +34,8 @@ default = "scary"
 
 [modes.scary]
 label = "Skummel"
+# English (British) voice; the messages in modes/scary are in English
+model = "voices/en_GB-alan-medium.onnx"
 # angry old troll: lower, gravelly, trembling, uneven pacing
 effects = "gain -8 rate 44100 pitch -180 overdrive 14 tremolo 5 20 reverb 40 echo 0.8 0.7 90 0.25 gain -n -3"
 length_scale = 1.2

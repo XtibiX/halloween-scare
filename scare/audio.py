@@ -150,6 +150,10 @@ class Speaker:
 
     # --- Speech --------------------------------------------------------------
 
+    def voice_model(self, mode):
+        """A mode can use its own voice (and language), else the default one."""
+        return self.modes[mode].get("model", self.model)
+
     def _piper_args(self, mode):
         """Optional per-mode Piper settings, see config.toml."""
         m = self.modes[mode]
@@ -165,7 +169,7 @@ class Speaker:
     def _speech_path(self, text, mode):
         effects = self.modes[mode]["effects"]
         piper = " ".join(self._piper_args(mode))
-        key = hashlib.sha1(f"{text}|{self.model}|{effects}|{piper}".encode()).hexdigest()
+        key = hashlib.sha1(f"{text}|{self.voice_model(mode)}|{effects}|{piper}".encode()).hexdigest()
         return self.cache_dir / f"tts-{key[:16]}.wav"
 
     def speech_file(self, text, mode=None):
@@ -180,7 +184,7 @@ class Speaker:
             raw = self.cache_dir / "tts-raw.wav"
             # nice: rendering must not starve the motion detection
             subprocess.run(["nice", "-n", "10", sys.executable, "-m", "piper",
-                            "-m", str(self.root / self.model), "-f", str(raw),
+                            "-m", str(self.root / self.voice_model(mode)), "-f", str(raw),
                             *self._piper_args(mode)],
                            input=text.encode(), check=True, capture_output=True, timeout=120)
             effects = shlex.split(self.modes[mode]["effects"])

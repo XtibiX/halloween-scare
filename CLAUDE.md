@@ -12,7 +12,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 ## Stack
 - `picamera2` (apt), with a 320x240 lores stream for motion and a hardware MJPEG main stream for the web
 - Motion: numpy background subtraction in `scare/motion.py` (no OpenCV, to save RAM)
-- Voice: Piper neural TTS (pip, in `.venv`), Norwegian voice `voices/no_NO-talesyntese-medium.onnx`,
+- Voice: Piper neural TTS (pip, in `.venv`). Per-mode voice: scary = English `voices/en_GB-alan-medium.onnx`
+  (English messages), kids = Norwegian `voices/no_NO-talesyntese-medium.onnx` (the default),
   then sox effects. Takes several seconds per sentence on the Pi, so speech is pre-rendered
   into `cache/` on startup and when messages change. Never render during a scare if it can be avoided.
 - Audio: PipeWire + WirePlumber, playback via `pw-play`. Scare and ambient sounds mix in PipeWire.
