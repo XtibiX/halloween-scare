@@ -18,7 +18,7 @@
           display:flex; align-items:center; justify-content:center; color:var(--dim); text-align:center; }
   .view img { width:100%; height:100%; object-fit:cover; }
   .view canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-  .tab { flex:1; min-width:120px; border:2px solid transparent; }
+  .tab { border:2px solid transparent; }
   .tab.active { border-color:var(--orange); color:var(--orange); }
   .meter { height:8px; background:#000; border-radius:4px; margin-top:10px; position:relative; overflow:hidden; }
   .meter > div { height:100%; background:var(--green); width:0; transition:width .3s; }
@@ -30,7 +30,11 @@
   button.big { flex:1; min-width:140px; font-size:17px; font-weight:600; }
   .scare { background:var(--orange); color:#1a0f00; }
   .armed { background:var(--green); color:#00210f; } .disarmed { background:var(--red); }
-  .mode { flex:1; min-width:140px; font-size:17px; font-weight:600; border:2px solid transparent; }
+  /* Grid, not flex: equal button sizes however long the label (Barnevennlig) */
+  #modeButtons, #editTabs { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+  #editTabs { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  @media (max-width:560px) { #modeButtons { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+  .mode { font-size:17px; font-weight:600; border:2px solid transparent; padding:12px 6px; }
   .mode.active { background:#3d2550; border-color:var(--orange); color:var(--orange); }
   button:disabled { opacity:.5; }
   label { display:block; margin:12px 0 4px; color:var(--dim); font-size:13px; }
