@@ -6,7 +6,7 @@ A quiet background sound loops in between. Everything is controlled from a web p
 
 - **Modes:** 💀 *Skummel* (scary, English troll voice), 👻 *Barnevennlig* (kid-friendly, Norwegian),
   🎯 *Auto* (estimates visitors' height and plays kid-friendly if anyone is under 130 cm), ⏻ *Av* (off)
-- **Natural voices** with [Piper](https://github.com/rhasspy/piper) neural text-to-speech, running offline on the Pi
+- **Natural voices** with [Piper](https://github.com/OHF-Voice/piper1-gpl) neural text-to-speech, running offline on the Pi
 - **Web page** with live camera view, mode buttons, sensitivity and volume sliders, message editor and sound uploads
 
 ## What you need
