@@ -88,8 +88,12 @@ bluetoothctl connect XX:XX:XX:XX:XX:XX
 wpctl status                           # the speaker should be listed under Sinks with a *
 ```
 
-Put the speaker's address in `config.toml` under `[speaker]` (`mac = "XX:XX:XX:XX:XX:XX"`), so the app
-reconnects it automatically before each scare.
+Put the speaker's address in a new file `config.local.toml` (not in git), so the app reconnects it
+automatically before each scare:
+
+```bash
+printf '[speaker]\nmac = "XX:XX:XX:XX:XX:XX"\n' > config.local.toml
+```
 
 ### 5. Start it
 
@@ -133,7 +137,8 @@ Calibrate again whenever you move the camera.
 
 `config.toml` holds the defaults: speaker address, volumes, motion sensitivity, the voice and sox effects for
 each mode, and Auto mode settings. Changes made on the web page are saved in `settings.json` and override
-`config.toml` (delete it to go back to the defaults). Restart after editing `config.toml`:
+`config.toml` (delete it to go back to the defaults). `config.local.toml` holds machine-specific values like
+the speaker address and overrides `config.toml`. Restart after editing either file:
 
 ```bash
 systemctl --user restart halloween

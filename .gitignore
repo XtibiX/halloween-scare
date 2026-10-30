@@ -11,8 +11,9 @@ cache/
 modes/*/scare/*
 modes/*/ambient/*
 
-# Values changed on the web page (machine-specific)
+# Machine-specific: values changed on the web page, and the speaker MAC
 settings.json
+config.local.toml
 
 # Runtime files
 __pycache__/

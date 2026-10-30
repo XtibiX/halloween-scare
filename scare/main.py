@@ -35,6 +35,12 @@ class Controller:
         self.root = ROOT
         with open(ROOT / "config.toml", "rb") as f:
             self.cfg = tomllib.load(f)
+        # Machine-specific values (speaker MAC) live in config.local.toml, not in git
+        local = ROOT / "config.local.toml"
+        if local.exists():
+            with open(local, "rb") as f:
+                for section, values in tomllib.load(f).items():
+                    self.cfg.setdefault(section, {}).update(values)
         m = self.cfg["motion"]
         self.auto = self.cfg["auto"]
         self.settings = {

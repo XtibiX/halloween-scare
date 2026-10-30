@@ -7,7 +7,7 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 ## Hardware
 - Raspberry Pi 4 (2 GB), headless, see `~/.claude/CLAUDE.md` for resource limits
 - Camera Module v1.3 (OV5647) on the CSI ribbon connector
-- Bluetooth speaker (MAC goes in `config.toml` under `[speaker]`)
+- Bluetooth speaker (MAC goes in `config.local.toml` under `[speaker]`, not in git)
 
 ## Stack
 - `picamera2` (apt), with a 320x240 lores stream for motion and a hardware MJPEG main stream for the web
@@ -20,7 +20,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 - Web: Flask on port 8000 (`scare/web.py`, `templates/index.html`)
 
 ## Layout
-- `config.toml`: startup defaults. `settings.json`: values changed on the web page (overrides config)
+- `config.toml`: startup defaults. `config.local.toml` (not in git): machine-specific overrides
+  (speaker MAC), merged per section. `settings.json`: values changed on the web page (overrides config)
 - Modes (switched on the web page, defined under `[modes.*]` in `config.toml` with label and voice effects):
   `scary` (Skummel) and `kids` (Barnevennlig, silly not frightening, for small children), plus
   `auto` (picks one per scare, below) and `off` (Av: no scares, no background sound)
@@ -44,8 +45,8 @@ Full user-facing steps are in README.md; keep both in sync.
    WirePlumber 0.5 disables Bluetooth audio without a local login seat (SSH/service), so
    `system/80-bluetooth-headless.conf` (installed by setup.sh into `~/.config/wireplumber/wireplumber.conf.d/`) sets
    `monitor.bluez.seat-monitoring = disabled`. Without it: `br-connection-profile-unavailable`.
-5. Pair the speaker with `bluetoothctl` (pair, trust, connect) and put its MAC in `config.toml`.
-   Current speaker: MEGABOOM 3, `AA:BB:CC:DD:EE:FF`
+5. Pair the speaker with `bluetoothctl` (pair, trust, connect) and put its MAC in `config.local.toml`.
+   Current speaker: MEGABOOM 3 (MAC in `config.local.toml`)
 6. `cp halloween.service ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now halloween`
 
 ## Running

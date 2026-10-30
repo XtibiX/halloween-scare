@@ -3,8 +3,9 @@
 
 [speaker]
 # Bluetooth MAC of the speaker, e.g. "AA:BB:CC:DD:EE:FF". Leave empty to just
-# play on whatever the default audio output is.
-mac = "AA:BB:CC:DD:EE:FF"
+# play on whatever the default audio output is. Set it in config.local.toml
+# (not in git), which overrides this file section by section.
+mac = ""
 volume = 0.9                # scare sounds and voice, 0.0 - 1.5
 ambient_volume = 0.25       # background loop, 0 = off
 
