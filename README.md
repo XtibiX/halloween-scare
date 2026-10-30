@@ -128,8 +128,11 @@ nobody seen clearly) it always picks kid-friendly.
 For it to work:
 1. Place the camera **1-1.5 m off the ground**, level or tilted slightly down, about **3 m** from where visitors
    stand, so a whole person fits in the picture head to feet. (A camera on the ground looking up can't measure height.)
-2. Tap **🎯 Auto**, stand where visitors stand, type your height (e.g. `180` or `1,80`) and tap **Calibrate**.
-3. Walk around: boxes on the video show green (adult, scary) or yellow (under the limit, kid-friendly).
+2. Tap **🎯 Auto**, stand on the doormat, type your height (e.g. `180` or `1,80`) and tap **Calibrate**.
+3. Stand 2-3 m further away (still head to feet in view) and tap **Add 2nd spot**. People further away look
+   smaller; with two spots the app knows by how much, so heights are right at any distance.
+4. Walk towards the camera: boxes on the video show green (adult, scary) or yellow (under the limit,
+   kid-friendly), and your height should stay about the same.
 
 Calibrate again whenever you move the camera, or after changing the person detector.
 

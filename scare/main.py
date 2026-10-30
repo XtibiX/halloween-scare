@@ -25,8 +25,9 @@ TUNABLE = {
     "volume": (float, 0.0, 1.5),
     "ambient_volume": (float, 0.0, 1.0),
     "kid_height_cm": (int, 80, 200),
-    "cm_per_px": (float, 0.0, 10.0),  # Auto mode calibration, 0 = not calibrated
 }
+# Two calibration spots must be this far apart (feet, fraction of the picture height)
+MIN_SPOT_GAP = 0.08
 
 
 class Controller:
@@ -54,11 +55,14 @@ class Controller:
             "volume": self.cfg["speaker"]["volume"],
             "ambient_volume": self.cfg["speaker"]["ambient_volume"],
             "kid_height_cm": self.auto["kid_height_cm"],
-            "cm_per_px": 0.0,
+            # Auto mode calibration, set by calibrate(): up to two spots, each
+            # [feet, size]: where the feet are (fraction of the picture height,
+            # 0 = top) and how tall 1 cm looks there (same unit). Empty = not calibrated
+            "calibration": [],
         }
         if self.settings_file.exists():
             saved = json.loads(self.settings_file.read_text())
-            self.settings.update({k: v for k, v in saved.items() if k in TUNABLE})
+            self.settings.update({k: v for k, v in saved.items() if k in self.settings})
 
         self.speaker = Speaker(root, self.cfg)
         if not self._valid_mode(self.settings["mode"]):
@@ -105,6 +109,9 @@ class Controller:
                 value = min(max(value, lo), hi)
             self.settings[name] = value
         self._apply_settings()
+        self.save_settings()
+
+    def save_settings(self):
         self.settings_file.write_text(json.dumps(self.settings, indent=2))
 
     # --- Scares --------------------------------------------------------------
@@ -148,20 +155,39 @@ class Controller:
                 self._person_detector = PersonDetector(path)
         return self._person_detector
 
+    def size_of_cm(self, feet):
+        """How tall 1 cm looks (fraction of the picture height) for someone whose
+        feet are at this height in the picture, or None if unknown.
+
+        With the camera above the ground looking down, people further away
+        have their feet higher up in the picture and look smaller. For a flat
+        ground the size grows in a straight line with the feet position, so two
+        calibration spots give it for any spot. One spot: the same everywhere."""
+        spots = self.settings["calibration"]
+        if not spots:
+            return None
+        if len(spots) == 1:
+            return spots[0][1]
+        (f1, s1), (f2, s2) = spots
+        size = s1 + (feet - f1) * (s2 - s1) / (f2 - f1)
+        # Far away, near the horizon: too small to measure
+        return size if size > 0.3 * min(s1, s2) else None
+
     def look_for_people(self):
         """Detects people in a fresh frame and estimates their height."""
         rgb = self.camera.rgb_frame()
         h, w = rgb.shape[:2]
-        scale = self.settings["cm_per_px"]
         people = []
         for x1, y1, x2, y2, score in self.person_detector().detect(rgb):
-            px = y2 - y1
+            feet_cut = y2 >= h - 2
+            # Feet outside the picture: no idea how far away, so no height
+            size = None if feet_cut else self.size_of_cm(y2 / h)
             people.append({
                 "box": [x1 / w, y1 / h, x2 / w, y2 / h],
-                "px": px,
-                "height_cm": round(px * scale) if scale else None,
-                # Head or feet outside the picture: the height is a guess
-                "cut": y1 <= 2 or y2 >= h - 2,
+                "px": y2 - y1,
+                "height_cm": round((y2 - y1) / h / size) if size else None,
+                # Head outside the picture: the height is too short
+                "cut": y1 <= 2 or feet_cut,
             })
         self.people, self.people_at = people, time.monotonic()
         return people
@@ -172,10 +198,10 @@ class Controller:
         heights = []
         end = time.monotonic() + self.auto["look_seconds"]
         while time.monotonic() < end:  # several frames: people move and hide behind each other
-            heights += [p["height_cm"] for p in self.look_for_people()]
+            heights += [p["height_cm"] for p in self.look_for_people() if p["height_cm"] is not None]
         limit = self.settings["kid_height_cm"]
         kid, adult = self.auto["kid_mode"], self.auto["adult_mode"]
-        if not self.settings["cm_per_px"]:
+        if not self.settings["calibration"]:
             mode, why = kid, "not calibrated"
         elif not heights:
             mode, why = kid, "nobody seen clearly"
@@ -187,28 +213,49 @@ class Controller:
         log.info("Auto: %s (%s)", self.speaker.modes[mode]["label"], why)
         return mode
 
-    def calibrate(self, height_cm):
-        """One person of known height stands where visitors stand."""
+    def calibrate(self, height_cm, add=False):
+        """One person of known height stands where visitors stand. add=False
+        starts over with this spot; add=True keeps the previous spot as well,
+        so heights are right at any distance (stand closer or further away)."""
         if self.camera is None:
             raise ValueError("No camera")
-        log.info("Calibrating with %d cm...", height_cm)
+        if not 100 <= height_cm <= 220:
+            raise ValueError("Height must be 100-220 cm")
+        log.info("Calibrating with %d cm%s...", height_cm, " (second spot)" if add else "")
         samples, cut = [], 0
         end = time.monotonic() + self.calibrate_seconds
         while time.monotonic() < end:
             people = self.look_for_people()
-            whole = [p["px"] for p in people if not p["cut"]]
+            whole = [p for p in people if not p["cut"]]
             cut += len(people) - len(whole)
             if whole:
-                samples.append(max(whole))
+                samples.append(max(whole, key=lambda p: p["px"]))
         if not samples:
-            why = ("Your head or feet are outside the picture. Step back, or tilt the camera."
-                   if cut else "Nobody seen. Stand in front of the camera, head to feet in view.")
-            log.info("Calibration failed: %s", why)
-            raise ValueError(why)
-        px = sorted(samples)[len(samples) // 2]
-        self.update_settings({"cm_per_px": height_cm / px})
-        log.info("Calibrated: %d cm = %d px", height_cm, px)
-        return {"px": round(px), "height_cm": height_cm}
+            self._calibration_failed(
+                "Your head or feet are outside the picture. Step back, or tilt the camera."
+                if cut else "Nobody seen. Stand in front of the camera, head to feet in view.")
+        p = sorted(samples, key=lambda p: p["px"])[len(samples) // 2]
+        x1, y1, x2, y2 = p["box"]
+        spot = [round(y2, 4), (y2 - y1) / height_cm]
+        spots = [spot]
+        if add and self.settings["calibration"]:
+            far = max(self.settings["calibration"], key=lambda s: abs(s[0] - spot[0]))
+            if abs(far[0] - spot[0]) < MIN_SPOT_GAP:
+                self._calibration_failed("Too close to the first spot. Stand clearly closer or further away.")
+            # Closer to the camera (feet lower in the picture) must look bigger
+            closer, further = sorted([far, spot], key=lambda s: -s[0])
+            if closer[1] <= further[1]:
+                self._calibration_failed("The two spots don't fit together. Start over with Calibrate.")
+            spots = sorted([far, spot])
+        self.settings["calibration"] = spots
+        self.save_settings()
+        log.info("Calibrated: %d cm = %d px, feet at %d%% (%d spot%s)", height_cm, p["px"],
+                 spot[0] * 100, len(spots), "s" if len(spots) > 1 else "")
+        return {"px": round(p["px"]), "height_cm": height_cm, "spots": len(spots)}
+
+    def _calibration_failed(self, why):
+        log.info("Calibration failed: %s", why)
+        raise ValueError(why)
 
     def people_watch_loop(self):
         """In Auto mode, keeps the people boxes on the web page fresh while

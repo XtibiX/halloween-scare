@@ -11,7 +11,7 @@ class DefaultsTest(AppTestCase):
         s = self.ctl.settings
         self.assertEqual(s["mode"], "scary")
         self.assertEqual(s["pixel_threshold"], 25)
-        self.assertEqual(s["cm_per_px"], 0.0)
+        self.assertEqual(s["calibration"], [])
         self.assertEqual(self.ctl.speaker.mac, "")
 
     def test_values_are_clamped_and_converted(self):
@@ -65,6 +65,19 @@ class SavedSettingsTest(AppTestCase):
 
     def test_saved_mode_that_no_longer_exists_falls_back(self):
         self.assertEqual(self.ctl.settings["mode"], "scary")
+
+
+class OldCalibrationTest(AppTestCase):
+    # The one-number calibration from before two-spot calibration
+    settings = json.dumps({"cm_per_px": 0.46})
+
+    def test_is_dropped_so_auto_asks_for_a_new_one(self):
+        self.assertNotIn("cm_per_px", self.ctl.settings)
+        self.assertEqual(self.ctl.settings["calibration"], [])
+
+    def test_calibration_cannot_be_set_from_the_settings_api(self):
+        with self.assertRaises(ValueError):
+            self.ctl.update_settings({"calibration": [[0.5, 1]]})
 
 
 class LocalConfigTest(AppTestCase):

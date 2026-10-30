@@ -34,14 +34,14 @@ class FakeCamera:
 
 
 class FakeDetector:
-    """Returns people of the given pixel heights, standing in the middle of the picture."""
+    """Returns people of the given pixel heights, with their heads at `top`.
+    A person can also be given as (top, height) to place them elsewhere."""
 
     def __init__(self, heights_px, top=40):
-        self.heights_px = heights_px
-        self.top = top
+        self.people = [p if isinstance(p, tuple) else (top, p) for p in heights_px]
 
     def detect(self, rgb):
-        return [(100, self.top, 200, self.top + h, 0.9) for h in self.heights_px]
+        return [(100, top, 200, top + h, 0.9) for top, h in self.people]
 
 
 class AppTestCase(unittest.TestCase):

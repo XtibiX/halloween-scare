@@ -53,8 +53,8 @@ sentence_silence = 0.35
 
 # Auto mode: per scare, picks kid_mode if anyone looks shorter than
 # kid_height_cm (or if nobody is seen clearly), otherwise adult_mode.
-# Needs one calibration on the web page: a person of known height standing
-# where visitors usually stand (the doormat).
+# Needs calibrating on the web page: a person of known height on the doormat,
+# then a second spot 2-3 m further away (calibration is saved in settings.json).
 [auto]
 # Person detector, downloaded by setup.sh. YOLO26n (AGPL-3.0, better heights);
 # YOLOX-nano (Apache-2.0, a bit faster) is used if the first file is missing.

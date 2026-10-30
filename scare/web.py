@@ -58,7 +58,8 @@ def create_app(ctl):
 
     @app.post("/api/calibrate")
     def calibrate():
-        result = ctl.calibrate(int(body().get("height_cm", 0)))
+        b = body()
+        result = ctl.calibrate(int(b.get("height_cm", 0)), add=bool(b.get("add")))
         return jsonify({**result, "status": ctl.status()})
 
     # Messages and sounds take the mode to edit (?mode=), which in Auto mode

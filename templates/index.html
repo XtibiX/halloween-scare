@@ -65,10 +65,12 @@
       or if it can't see anyone clearly. Otherwise plays the scary mode.</p>
     <label>Kid height limit: <b id="vKid"></b> cm</label>
     <input type="range" id="kid_height_cm" min="90" max="170" step="5">
-    <label for="calHeight">Calibrate: one person stands where visitors stand (head to feet in view), enter their height</label>
+    <label for="calHeight">Calibrate: stand on the doormat (head to feet in view), enter your height and tap
+      Calibrate. Then stand 2-3 m further away and tap Add 2nd spot, so heights are right at any distance.</label>
+    <input type="text" id="calHeight" inputmode="decimal" placeholder="Your height, e.g. 180 or 1,80">
     <div class="row">
-      <input type="text" id="calHeight" inputmode="decimal" placeholder="Your height, e.g. 180 or 1,80" style="flex:1">
-      <button id="calBtn">Calibrate</button>
+      <button id="calBtn" style="flex:1">Calibrate</button>
+      <button id="calAddBtn" style="flex:1">Add 2nd spot</button>
     </div>
     <p class="note" id="calNote"></p>
     <p class="note">Last decision: <b id="lastAuto">–</b></p>
@@ -213,7 +215,11 @@ function renderModes(s) {
   });
   $("autoCard").hidden = s.mode !== "auto";
   if (Date.now() > calMessageUntil) {
-    $("calNote").textContent = s.cm_per_px ? "Calibrated ✓" : "Not calibrated yet: Auto will always pick kid-friendly.";
+    $("calNote").textContent = [
+      "Not calibrated yet: Auto will always pick kid-friendly.",
+      "Calibrated at 1 spot: heights are only right near there. Add a 2nd spot.",
+      "Calibrated at 2 spots ✓",
+    ][s.calibration.length];
   }
   const la = s.last_auto;
   $("lastAuto").textContent = la ? `${la.at}: ${s.modes[la.mode]} (${la.why})` : "–";
@@ -306,19 +312,25 @@ function calMessage(text) {
   $("calNote").textContent = text;
   calMessageUntil = Date.now() + 15000;  // keep it visible over the status refresh
 }
-$("calBtn").onclick = async () => {
+async function calibrate(add) {
   // Accepts "180", "180 cm", "1,80" and "1.80"
   let v = parseFloat($("calHeight").value.replace(",", "."));
   if (v > 0 && v < 3) v *= 100;
   const cm = Math.round(v);
   if (!(cm >= 100 && cm <= 220)) { calMessage("Enter your height, e.g. 180 or 1,80"); return; }
-  $("calBtn").disabled = true; calMessage(`Looking for a ${cm} cm person… stand still`);
-  const r = await api("/api/calibrate", {height_cm: cm});
-  $("calBtn").disabled = false;
+  if (add && !state.calibration.length) { calMessage("Tap Calibrate first, on the doormat."); return; }
+  $("calBtn").disabled = $("calAddBtn").disabled = true;
+  calMessage(`Looking for a ${cm} cm person… stand still`);
+  const r = await api("/api/calibrate", {height_cm: cm, add});
+  $("calBtn").disabled = $("calAddBtn").disabled = false;
   if (r.error) { calMessage(r.error); return; }
   state = r.status; render();
-  calMessage(`Calibrated ✓ (${cm} cm = ${r.px} px). Walk around to check the heights on the video.`);
-};
+  calMessage(r.spots === 2
+    ? `Calibrated at 2 spots ✓ (${cm} cm = ${r.px} px here). Walk towards the camera: the height should stay the same.`
+    : `Calibrated ✓ (${cm} cm = ${r.px} px). Now stand 2-3 m further away and tap Add 2nd spot.`);
+}
+$("calBtn").onclick = () => calibrate(false);
+$("calAddBtn").onclick = () => calibrate(true);
 for (const kind of ["scare", "ambient"]) {
   $(kind + "Upload").onchange = async e => {
     const form = new FormData();

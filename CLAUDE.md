@@ -30,8 +30,10 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
   `models` release; onnxruntime, ~0.29 s/frame, loaded on first use; falls back to YOLOX-nano
   `models/yolox_nano.onnx` if missing; `people.py` recognises the layout from the output shape) looks at the visitors for 1.5 s; if anyone is shorter
   than `kid_height_cm` (130), or nobody is seen clearly, or it isn't calibrated, it plays the kid mode,
-  else the scary mode. Always fail towards kid mode. Height = box pixels × `cm_per_px`, calibrated on the
-  web page with one person of known height on the doormat (assumes visitors stand at roughly that distance).
+  else the scary mode. Always fail towards kid mode. Height = box height / size of 1 cm at the feet position.
+  Calibrated on the web page with a person of known height at two spots (`settings["calibration"]`, [feet, size]
+  each); the size grows linearly with how low the feet are in the picture (flat ground, camera above it), so
+  heights are right at any distance. One spot = same scale everywhere. Feet cut off = no height.
 - `modes/<mode>/messages.txt`: one message per line (scary: English, kids: Norwegian). Norwegian lines must
   not use English words like "Halloween": the Norwegian voice mispronounces them. Use "kveld"/"aften".
 - `modes/<mode>/scare/`: played before each message. `modes/<mode>/ambient/`: background loop
