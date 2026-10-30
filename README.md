@@ -4,7 +4,8 @@ A motion-triggered Halloween prop for a Raspberry Pi with a camera and a Bluetoo
 When someone walks up to the door, it plays a spooky sound followed by a spoken message.
 A quiet background sound loops in between. Everything is controlled from a web page on your phone.
 
-- **Modes:** 💀 *Skummel* (scary, English troll voice), 👻 *Barnevennlig* (kid-friendly, Norwegian),
+- **Modes:** 💀 *Skummel* (scary, English troll voice), 👻 *Barnevennlig* (kid-friendly, Norwegian friendly-ghost voice:
+  spooky to listen to, but only nice messages),
   🎯 *Auto* (estimates visitors' height and plays kid-friendly if anyone is under 130 cm), ⏻ *Av* (off)
 - **Natural voices** with [Piper](https://github.com/OHF-Voice/piper1-gpl) neural text-to-speech, running offline on the Pi
 - **Web page** with live camera view, mode buttons, sensitivity and volume sliders, message editor and sound uploads

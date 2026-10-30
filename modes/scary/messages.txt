@@ -1,14 +1,42 @@
-# One message per line, in English (this mode uses an English voice).
-# Lines starting with # are ignored. Short, angry lines ending in ! suit the troll voice.
-Who dares to stomp on my doorstep? Go away!
-A hundred years I have waited. And now YOU come?
-Turn back! While you still can!
-I see you. I always see you.
-Trick or treat? I choose treat. And the treat is YOU!
-You look delicious tonight.
-Who dares to wake me from my sleep?
-Don't look behind you!
-Come closer. Closer. Just a little closer.
-One more step, and you are mine forever!
-The dead are restless tonight. And so am I!
-Nobody who came in here ever came out again.
+# Additional scary messages
+You should not have come here!
+I have been watching you from the shadows!
+Your footsteps will be the last thing I hear!
+Something is standing right behind you!
+I know what you did last night!
+The shadows are getting closer!
+You cannot hide from me!
+I smell fear! Delicious fear!
+This house belongs to the dead!
+You have disturbed something terrible!
+I was waiting for you. All night!
+The door is locked. Did you notice?
+There is no escape!
+I can hear your little heart beating!
+Run! RUN WHILE YOU CAN!
+Your little adventure ends here!
+The darkness knows your name!
+I have so many friends. You cannot see them!
+They are coming. And they are hungry!
+Do you hear that scratching?
+That was not the wind!
+I was once like you. Long ago!
+You have made a terrible mistake!
+The graveyard is full tonight. There is room for one more!
+Come inside. I insist!
+I hope you said goodbye to your family!
+The last visitor left screaming!
+I do love the sound of frightened children!
+Your nightmare has just begun!
+Don't scream. Nobody will hear you!
+I can smell your fear from here!
+The candles are dying. Just like your hope!
+I have waited a thousand nights for this moment!
+You look familiar. Have we met in your nightmares?
+The walls are listening!
+Something is moving beneath your feet!
+I am not alone in here!
+Sweet dreams. If you ever sleep again!
+You are trapped in my little world now!
+Knock knock! Who is there? Your worst nightmare!
+One last warning. LEAVE!
