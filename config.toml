@@ -56,7 +56,10 @@ sentence_silence = 0.35
 # Needs one calibration on the web page: a person of known height standing
 # where visitors usually stand (the doormat).
 [auto]
-model = "models/yolox_nano.onnx"
+# Person detector, downloaded by setup.sh. YOLO26n (AGPL-3.0, better heights);
+# YOLOX-nano (Apache-2.0, a bit faster) is used if the first file is missing.
+model = "models/yolo26n-416.onnx"
+fallback_model = "models/yolox_nano.onnx"
 kid_mode = "kids"
 adult_mode = "scary"
 kid_height_cm = 130

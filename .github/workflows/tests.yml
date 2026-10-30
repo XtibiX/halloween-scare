@@ -16,5 +16,5 @@ jobs:
         with:
           python-version: "3.13"
       # No camera, speaker or Piper needed: the tests fake them
-      - run: pip install numpy flask
+      - run: pip install numpy flask pillow onnxruntime
       - run: python -m unittest -v

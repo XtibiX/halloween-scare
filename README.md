@@ -121,7 +121,7 @@ The first start renders all the messages with Piper, which takes 15 seconds per 
 
 ### Auto mode (height detection)
 
-Auto uses a small person detector (YOLOX-nano) to estimate how tall the visitors are, and plays the
+Auto uses a small person detector (YOLO26n) to estimate how tall the visitors are, and plays the
 kid-friendly mode if **anyone** is shorter than the limit (130 cm by default). When in doubt (not calibrated,
 nobody seen clearly) it always picks kid-friendly.
 
@@ -131,7 +131,7 @@ For it to work:
 2. Tap **🎯 Auto**, stand where visitors stand, type your height (e.g. `180` or `1,80`) and tap **Calibrate**.
 3. Walk around: boxes on the video show green (adult, scary) or yellow (under the limit, kid-friendly).
 
-Calibrate again whenever you move the camera.
+Calibrate again whenever you move the camera, or after changing the person detector.
 
 ## Configuration
 
@@ -185,10 +185,12 @@ They take a few seconds and need no camera, speaker or voices. GitHub runs them 
 ## Credits
 
 - Voices: [Piper](https://github.com/OHF-Voice/piper1-gpl) (GPL-3.0, run as a separate program) with the `no_NO-talesyntese-medium` and `en_GB-alan-medium` voices
-- Person detection: [YOLOX-nano](https://github.com/Megvii-BaseDetection/YOLOX) (Apache 2.0)
+- Person detection: [Ultralytics YOLO26n](https://github.com/ultralytics/ultralytics) (AGPL-3.0), exported to ONNX at 416 px;
+  [YOLOX-nano](https://github.com/Megvii-BaseDetection/YOLOX) (Apache 2.0) as a fallback
 - Starter sounds are generated with sox by `make_sounds.sh`. No third-party sound files are included;
   upload your own on the web page (for example from [Pixabay](https://pixabay.com/sound-effects/) or CC0 sounds on freesound.org)
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Downloaded voices and the YOLOX model keep their own licenses.
+AGPL-3.0, see [LICENSE](LICENSE) (the YOLO26 person detector is AGPL-3.0). Downloaded voices and
+the YOLOX model keep their own licenses.

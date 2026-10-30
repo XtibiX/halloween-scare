@@ -23,8 +23,12 @@ for v in no/no_NO/talesyntese/medium/no_NO-talesyntese-medium \
     done
 done
 
-# Person detector for Auto mode (YOLOX-nano, ~4 MB)
+# Person detectors for Auto mode: YOLO26n (~10 MB, exported from Ultralytics at
+# 416 px and attached to this repo's "models" release), and YOLOX-nano (~4 MB),
+# which the app falls back to if YOLO26n is missing
 mkdir -p models
+[ -s models/yolo26n-416.onnx ] || curl -fL --retry 3 -o models/yolo26n-416.onnx \
+    https://github.com/XtibiX/halloween-scare/releases/download/models/yolo26n-416.onnx
 [ -s models/yolox_nano.onnx ] || curl -fL --retry 3 -o models/yolox_nano.onnx \
     https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_nano.onnx
 

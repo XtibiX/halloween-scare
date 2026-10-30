@@ -141,8 +141,11 @@ class Controller:
         with self._person_lock:
             if self._person_detector is None:
                 from .people import PersonDetector
-                log.info("Loading person detector")
-                self._person_detector = PersonDetector(self.root / self.auto["model"])
+                path = self.root / self.auto["model"]
+                if not path.exists():
+                    path = self.root / self.auto["fallback_model"]
+                log.info("Loading person detector %s", path.name)
+                self._person_detector = PersonDetector(path)
         return self._person_detector
 
     def look_for_people(self):
