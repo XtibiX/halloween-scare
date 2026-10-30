@@ -1,12 +1,14 @@
 # Halloween Scare Pi
 
 Motion-triggered Halloween prop. The Pi camera watches the doorway; on motion a
-Bluetooth speaker plays a random scare sound, then a spoken Norwegian message.
+Bluetooth speaker plays a random scare sound, then a spoken message (English troll in
+the scary mode, Norwegian friendly ghost in the kid mode).
 A quiet ambient loop plays all the time. A web page on the LAN controls it.
 
 ## Hardware
 - Raspberry Pi 4 (2 GB), headless, see `~/.claude/CLAUDE.md` for resource limits
-- Camera Module v1.3 (OV5647) on the CSI ribbon connector
+- Camera Module v1.3 (OV5647) NoIR (no infrared filter) on the CSI ribbon connector. Pictures are pink in
+  daylight without `tuning = "ov5647_noir.json"` under `[camera]` in `config.local.toml`
 - Bluetooth speaker (MAC goes in `config.local.toml` under `[speaker]`, not in git)
 
 ## Stack
@@ -21,7 +23,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 
 ## Layout
 - `config.toml`: startup defaults. `config.local.toml` (not in git): machine-specific overrides
-  (speaker MAC), merged per section. `settings.json`: values changed on the web page (overrides config)
+  (speaker MAC, camera tuning), merged per section. `settings.json`: values changed on the web page and the
+  Auto calibration (overrides config)
 - Modes (switched on the web page, defined under `[modes.*]` in `config.toml` with label and voice effects):
   `scary` (Skummel) and `kids` (Barnevennlig, for small children: a spooky
   friendly-ghost voice, but the messages are nice and silly, not frightening), plus
@@ -44,7 +47,7 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 ## Setup (fresh Pi)
 Full user-facing steps are in README.md; keep both in sync.
 1. `sudo apt install -y git curl python3-venv python3-picamera2 python3-numpy python3-flask python3-pil sox pipewire pipewire-audio wireplumber libspa-0.2-bluetooth`
-2. `./setup.sh` (venv + Piper + voice download), then `./make_sounds.sh` (starter sounds)
+2. `./setup.sh` (venv + Piper, voices, person detectors, WirePlumber fix, service file), then `./make_sounds.sh` (starter sounds)
 3. `sudo loginctl enable-linger normann`
 4. Bluetooth: `sudo rfkill unblock bluetooth` (blocked by default), then `bluetoothctl power on`.
    WirePlumber 0.5 disables Bluetooth audio without a local login seat (SSH/service), so
@@ -52,7 +55,7 @@ Full user-facing steps are in README.md; keep both in sync.
    `monitor.bluez.seat-monitoring = disabled`. Without it: `br-connection-profile-unavailable`.
 5. Pair the speaker with `bluetoothctl` (pair, trust, connect) and put its MAC in `config.local.toml`.
    Current speaker: MEGABOOM 3 (MAC in `config.local.toml`)
-6. `cp halloween.service ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now halloween`
+6. `systemctl --user enable --now halloween` (setup.sh already copied `halloween.service`)
 
 ## Running
 - Manually: `.venv/bin/python -m scare.main` (from this folder)

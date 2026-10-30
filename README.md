@@ -144,7 +144,7 @@ Calibrate again whenever you move the camera, or after changing the person detec
 `config.toml` holds the defaults: speaker address, volumes, motion sensitivity, the voice and sox effects for
 each mode, and Auto mode settings. Changes made on the web page are saved in `settings.json` and override
 `config.toml` (delete it to go back to the defaults). `config.local.toml` holds machine-specific values like
-the speaker address and overrides `config.toml`. Restart after editing either file:
+the speaker address (and the camera colour profile for a NoIR camera) and overrides `config.toml`. Restart after editing either file:
 
 ```bash
 systemctl --user restart halloween
