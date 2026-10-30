@@ -255,7 +255,7 @@ class Controller:
         c = self.cfg["camera"]
         try:
             from .camera import Camera
-            self.camera = Camera(c["width"], c["height"], c["fps"])
+            self.camera = Camera(c["width"], c["height"], c["fps"], c.get("tuning", ""))
             self.camera.start()
         except Exception as e:
             # Keep running without a camera so the speaker and web page still work

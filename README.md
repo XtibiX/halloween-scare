@@ -177,6 +177,7 @@ They take a few seconds and need no camera, speaker or voices. GitHub runs them 
 | `br-connection-profile-unavailable` when connecting the speaker | Run `./setup.sh` again (installs the WirePlumber fix), then `bluetoothctl connect ...` |
 | Bluetooth `Failed to set power on` | `sudo rfkill unblock bluetooth` |
 | `rpicam-hello: symbol lookup error` | Camera tools and libcamera out of sync after an update: `sudo apt full-upgrade` |
+| Camera picture is pink | A NoIR camera (no infrared filter). Add `[camera]` with `tuning = "ov5647_noir.json"` to `config.local.toml` (Module v2: `imx219_noir.json`, Module 3: `imx708_noir.json`) and restart |
 | Start of a sound gets cut off | Normal for Bluetooth speakers waking up; the background sound keeps the speaker awake |
 | Page doesn't show changes | Close the browser tab and open the page again |
 | SSH drops kill your terminal | Run long sessions inside `tmux`; the app itself runs as a service and is unaffected |

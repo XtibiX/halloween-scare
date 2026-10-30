@@ -69,6 +69,9 @@ look_seconds = 1.5          # how long to look at the visitors before deciding
 width = 640
 height = 480
 fps = 10
+# libcamera colour profile, e.g. "ov5647_noir.json" for a NoIR camera (no infrared filter,
+# pink pictures in daylight). Empty = the default for the sensor.
+tuning = ""
 
 [web]
 host = "0.0.0.0"

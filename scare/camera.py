@@ -31,8 +31,8 @@ class Camera:
     """Main stream is JPEG-encoded in hardware for the web page; the small
     lores stream is used for motion detection."""
 
-    def __init__(self, width, height, fps):
-        self.picam2 = Picamera2()
+    def __init__(self, width, height, fps, tuning=""):
+        self.picam2 = Picamera2(tuning=Picamera2.load_tuning_file(tuning) if tuning else None)
         config = self.picam2.create_video_configuration(
             main={"size": (width, height)},
             lores={"size": LORES_SIZE, "format": "YUV420"},
