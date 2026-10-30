@@ -179,3 +179,7 @@ Downloaded and generated files (`.venv/`, `voices/`, `models/`, `cache/`, all so
 - Person detection: [YOLOX-nano](https://github.com/Megvii-BaseDetection/YOLOX) (Apache 2.0)
 - Starter sounds are generated with sox by `make_sounds.sh`. No third-party sound files are included;
   upload your own on the web page (for example from [Pixabay](https://pixabay.com/sound-effects/) or CC0 sounds on freesound.org)
+
+## License
+
+MIT, see [LICENSE](LICENSE). Downloaded voices and the YOLOX model keep their own licenses.
