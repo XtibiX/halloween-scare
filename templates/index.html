@@ -176,7 +176,9 @@ function soundList(listEl, kind, names) {
   listEl.innerHTML = names.length ? "" : '<li class="note">No sounds yet</li>';
   for (const name of names) {
     const li = document.createElement("li");
-    const span = document.createElement("span"); span.textContent = name;
+    const span = document.createElement("span");
+    span.textContent = name.length > 20 ? name.slice(0, 19) + "…" : name;
+    span.title = name;
     const play = document.createElement("button"); play.textContent = "▶";
     const url = `/sounds/${editMode}/${kind}/${encodeURIComponent(name)}`;
     play.onclick = () => new Audio(url).play();
