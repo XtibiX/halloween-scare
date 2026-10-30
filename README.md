@@ -184,7 +184,7 @@ They take a few seconds and need no camera, speaker or voices. GitHub runs them 
 
 ## Credits
 
-- Voices: [Piper](https://github.com/rhasspy/piper) with the `no_NO-talesyntese-medium` and `en_GB-alan-medium` voices
+- Voices: [Piper](https://github.com/OHF-Voice/piper1-gpl) (GPL-3.0, run as a separate program) with the `no_NO-talesyntese-medium` and `en_GB-alan-medium` voices
 - Person detection: [YOLOX-nano](https://github.com/Megvii-BaseDetection/YOLOX) (Apache 2.0)
 - Starter sounds are generated with sox by `make_sounds.sh`. No third-party sound files are included;
   upload your own on the web page (for example from [Pixabay](https://pixabay.com/sound-effects/) or CC0 sounds on freesound.org)
