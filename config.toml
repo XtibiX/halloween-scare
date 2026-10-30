@@ -46,10 +46,10 @@ noise_w = 1.0
 
 [modes.kids]
 label = "Barnevennlig"
-# natural voice, calm pace, very light room echo (pitching up sounds robotic)
-effects = "gain -3 rate 44100 reverb 15"
-length_scale = 1.2
-sentence_silence = 0.35
+# friendly ghost: deeper, trembling, big room and echo; the messages stay nice
+effects = "gain -6 rate 44100 pitch -400 tremolo 4 25 reverb 60 echo 0.8 0.7 150 0.35 gain -n -3"
+length_scale = 1.3
+sentence_silence = 0.4
 
 # Auto mode: per scare, picks kid_mode if anyone looks shorter than
 # kid_height_cm (or if nobody is seen clearly), otherwise adult_mode.
