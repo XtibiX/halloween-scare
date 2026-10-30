@@ -12,7 +12,6 @@ from .web import create_app
 log = logging.getLogger("halloween")
 
 ROOT = Path(__file__).resolve().parent.parent
-SETTINGS_FILE = ROOT / "settings.json"
 AUTO = "auto"
 OFF = "off"  # no scares and no background sound
 
@@ -31,12 +30,15 @@ TUNABLE = {
 
 
 class Controller:
-    def __init__(self):
-        self.root = ROOT
-        with open(ROOT / "config.toml", "rb") as f:
+    calibrate_seconds = 3
+
+    def __init__(self, root=ROOT):
+        self.root = root
+        self.settings_file = root / "settings.json"
+        with open(root / "config.toml", "rb") as f:
             self.cfg = tomllib.load(f)
         # Machine-specific values (speaker MAC) live in config.local.toml, not in git
-        local = ROOT / "config.local.toml"
+        local = root / "config.local.toml"
         if local.exists():
             with open(local, "rb") as f:
                 for section, values in tomllib.load(f).items():
@@ -54,11 +56,11 @@ class Controller:
             "kid_height_cm": self.auto["kid_height_cm"],
             "cm_per_px": 0.0,
         }
-        if SETTINGS_FILE.exists():
-            saved = json.loads(SETTINGS_FILE.read_text())
+        if self.settings_file.exists():
+            saved = json.loads(self.settings_file.read_text())
             self.settings.update({k: v for k, v in saved.items() if k in TUNABLE})
 
-        self.speaker = Speaker(ROOT, self.cfg)
+        self.speaker = Speaker(root, self.cfg)
         if not self._valid_mode(self.settings["mode"]):
             self.settings["mode"] = self.speaker.mode
         self.detector = MotionDetector(m["pixel_threshold"], m["area_percent"], m["frames_required"])
@@ -103,7 +105,7 @@ class Controller:
                 value = min(max(value, lo), hi)
             self.settings[name] = value
         self._apply_settings()
-        SETTINGS_FILE.write_text(json.dumps(self.settings, indent=2))
+        self.settings_file.write_text(json.dumps(self.settings, indent=2))
 
     # --- Scares --------------------------------------------------------------
 
@@ -140,7 +142,7 @@ class Controller:
             if self._person_detector is None:
                 from .people import PersonDetector
                 log.info("Loading person detector")
-                self._person_detector = PersonDetector(ROOT / self.auto["model"])
+                self._person_detector = PersonDetector(self.root / self.auto["model"])
         return self._person_detector
 
     def look_for_people(self):
@@ -188,7 +190,7 @@ class Controller:
             raise ValueError("No camera")
         log.info("Calibrating with %d cm...", height_cm)
         samples, cut = [], 0
-        end = time.monotonic() + 3
+        end = time.monotonic() + self.calibrate_seconds
         while time.monotonic() < end:
             people = self.look_for_people()
             whole = [p["px"] for p in people if not p["cut"]]

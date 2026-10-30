@@ -151,6 +151,7 @@ config.toml               settings and per-mode voices
 modes/scary/, modes/kids/ messages.txt, scare/ and ambient/ sounds for each mode
 scare/                    the app (camera, motion, people detection, audio, web)
 templates/index.html      the web page
+tests/                    automatic tests (no camera or speaker needed)
 setup.sh, make_sounds.sh  setup and starter-sound scripts
 halloween.service         systemd user service
 system/                   WirePlumber config for headless Bluetooth audio (installed by setup.sh)
@@ -158,6 +159,14 @@ system/                   WirePlumber config for headless Bluetooth audio (insta
 
 Downloaded and generated files (`.venv/`, `voices/`, `models/`, `cache/`, all sound files) are not in git;
 `setup.sh` and `make_sounds.sh` recreate them. Sounds you upload on the web page stay on your Pi only.
+
+## Tests
+
+```bash
+.venv/bin/python -m unittest
+```
+
+They take a few seconds and need no camera, speaker or voices. GitHub runs them on every push.
 
 ## Troubleshooting
 

@@ -54,3 +54,6 @@ Full user-facing steps are in README.md; keep both in sync.
 - Service: `systemctl --user restart halloween` (or stop/status). Logs: `tail -f cache/app.log` (no user journal on this Pi)
 - Web: `http://haloween-pi.local:8000` (hostname really is spelled `haloween-pi`)
 - The app keeps running without a camera so audio and the web page can be tested alone.
+- Tests: `.venv/bin/python -m unittest` (stdlib unittest, `tests/`, a few seconds). They run the app in a
+  temp folder with a fake camera and person detector; no camera, speaker or Piper needed. GitHub Actions
+  runs them on every push (`.github/workflows/tests.yml`). Auto mode's kid-mode fallbacks must stay tested.
