@@ -67,6 +67,7 @@ class Controller:
             self.settings.update({k: v for k, v in saved.items() if k in self.settings})
 
         self.speaker = Speaker(root, self.cfg)
+        self.scary_until = 0.0  # Auto: scary background until then (monotonic time)
         # Add-on: only loaded when [lights] enabled = true
         self.lights = None
         if self.cfg.get("lights", {}).get("enabled", False):
@@ -100,12 +101,48 @@ class Controller:
         self.detector.area_percent = self.settings["area_percent"]
         self.speaker.volume = self.settings["volume"]
         self.speaker.ambient_volume = self.settings["ambient_volume"]
-        # In Auto the background sound comes from the kid mode, the safe choice
         mode = self.settings["mode"]
-        self.speaker.set_mode(self.auto["kid_mode"] if mode in (AUTO, OFF) else mode)
+        if mode != AUTO:
+            self.scary_until = 0.0
+        self.speaker.set_mode(self.base_mode())
         self.speaker.set_silent(mode == OFF)
         if self.lights:
             self.lights.active = self.settings["lights"] and mode != OFF
+
+    def base_mode(self):
+        """The mode of the background sound (and lights). In Auto the kid mode, the
+        safe choice, except for a while after a scary scare (scary_hold_seconds)."""
+        mode = self.settings["mode"]
+        if mode == AUTO and time.monotonic() < self.scary_until:
+            return self.auto["adult_mode"]
+        return self.auto["kid_mode"] if mode in (AUTO, OFF) else mode
+
+    def _hold_after_auto(self, mode):
+        """Auto picked `mode` for a scare: a scary one keeps the scary background
+        for scary_hold_seconds (again from now); a kid one ends that at once."""
+        if self.settings["mode"] != AUTO:
+            return
+        if mode == self.auto["adult_mode"]:
+            self.scary_until = time.monotonic() + self.auto.get("scary_hold_seconds", 180)
+        else:
+            self.scary_until = 0.0
+        self.speaker.set_mode(self.base_mode())
+
+    def check_scary_hold(self):
+        """Back to the kid mode's background when the hold has run out."""
+        if self.scary_until and time.monotonic() >= self.scary_until:
+            self.scary_until = 0.0
+            if self.settings["mode"] == AUTO:
+                log.info("Auto: back to %s", self.speaker.modes[self.auto["kid_mode"]]["label"])
+            self.speaker.set_mode(self.base_mode())
+
+    def scary_hold_loop(self):
+        while True:
+            time.sleep(1)
+            try:
+                self.check_scary_hold()
+            except Exception:
+                log.exception("Scary hold check failed")
 
     def update_settings(self, changes):
         for name, value in changes.items():
@@ -144,6 +181,7 @@ class Controller:
         mode = mode or self.pick_mode()
         if not self.speaker.scare(text, mode):
             return False
+        self._hold_after_auto(mode)
         self.last_scare = time.monotonic()
         self.last_scare_at = time.strftime("%H:%M:%S")
         self.last_scare_reason = f"{reason}, {self.speaker.modes[mode]['label']}"
@@ -290,6 +328,7 @@ class Controller:
             "modes": {**{k: v["label"] for k, v in self.speaker.modes.items()}, AUTO: "Auto", OFF: "Av"},
             "content_modes": {k: v["label"] for k, v in self.speaker.modes.items()},
             "base_mode": self.speaker.mode,
+            "scary_hold_left": max(0, round(self.scary_until - time.monotonic())) if self.scary_until else 0,
             "camera": self.camera is not None,
             "camera_error": self.camera_error,
             "motion_level": round(self.detector.level, 2),
@@ -348,6 +387,7 @@ def main():
     ctl = Controller()
     ctl.speaker.prerender()
     ctl.speaker.start_ambient()
+    threading.Thread(target=ctl.scary_hold_loop, daemon=True).start()
     if ctl.lights:
         ctl.lights.start()
     ctl.start_camera()

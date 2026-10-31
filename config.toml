@@ -64,6 +64,9 @@ kid_mode = "kids"
 adult_mode = "scary"
 kid_height_cm = 130
 look_seconds = 1.5          # how long to look at the visitors before deciding
+# After a scary scare the background sound and lights stay scary this long (each scare
+# still checks the visitors first; a kid result switches back at once)
+scary_hold_seconds = 180
 
 [camera]
 width = 640

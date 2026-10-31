@@ -57,6 +57,49 @@ class AutoModeTest(AppTestCase):
         with self.assertLogs("halloween", "ERROR"):
             self.assertEqual(self.ctl.pick_mode(), "kids")
 
+    def scare(self):
+        self.ctl.speaker.scare = lambda text, mode: True  # no playback in tests
+        self.assertTrue(self.ctl.scare())
+
+    def test_background_is_kid_mode_in_auto(self):
+        self.assertEqual(self.ctl.speaker.mode, "kids")
+
+    def test_scary_scare_keeps_scary_background_then_goes_back(self):
+        self.see(360)
+        self.scare()
+        self.assertEqual(self.ctl.speaker.mode, "scary")
+        left = self.ctl.status()["scary_hold_left"]
+        self.assertTrue(170 < left <= 180)
+        self.ctl.check_scary_hold()
+        self.assertEqual(self.ctl.speaker.mode, "scary")  # not yet
+        self.ctl.scary_until -= 181
+        self.ctl.check_scary_hold()
+        self.assertEqual(self.ctl.speaker.mode, "kids")
+        self.assertEqual(self.ctl.status()["scary_hold_left"], 0)
+
+    def test_scares_during_the_hold_still_check_for_kids(self):
+        self.see(360)
+        self.scare()
+        self.see(360, 200)  # a child arrives
+        self.scare()
+        self.assertEqual(self.ctl.last_auto["mode"], "kids")
+        self.assertEqual(self.ctl.speaker.mode, "kids")  # hold ended at once
+        self.assertEqual(self.ctl.scary_until, 0.0)
+
+    def test_unsure_during_the_hold_ends_it(self):
+        self.see(360)
+        self.scare()
+        self.see()
+        self.scare()
+        self.assertEqual(self.ctl.speaker.mode, "kids")
+
+    def test_leaving_auto_ends_the_hold(self):
+        self.see(360)
+        self.scare()
+        self.ctl.update_settings({"mode": "kids"})
+        self.ctl.update_settings({"mode": "auto"})
+        self.assertEqual(self.ctl.speaker.mode, "kids")
+
     def test_chosen_mode_is_used_as_is_outside_auto(self):
         self.see(200)
         self.ctl.update_settings({"mode": "scary"})

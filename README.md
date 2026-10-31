@@ -159,6 +159,10 @@ Auto uses a small person detector (YOLO26n) to estimate how tall the visitors ar
 kid-friendly mode if **anyone** is shorter than the limit (130 cm by default). When in doubt (not calibrated,
 nobody seen clearly) it always picks kid-friendly.
 
+The background sound (and the Hue lights) are kid-friendly in Auto. After a scary scare they stay scary for
+3 minutes (`scary_hold_seconds` under `[auto]`), counted again from each scary scare; the page shows the time
+left. Every scare in that time still checks the visitors first, and a kid-friendly result switches back at once.
+
 For it to work:
 1. Place the camera **1-1.5 m off the ground**, level or tilted slightly down, about **3 m** from where visitors
    stand, so a whole person fits in the picture head to feet. (A camera on the ground looking up can't measure height.)

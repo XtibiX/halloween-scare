@@ -282,6 +282,10 @@ function render() {
 
   const warn = [];
   if (s.mode === "off") warn.push("Off: no scares and no sound");
+  if (s.mode === "auto" && s.scary_hold_left) {
+    const m = Math.floor(s.scary_hold_left / 60), sec = String(s.scary_hold_left % 60).padStart(2, "0");
+    warn.push(`Auto: ${s.modes[s.base_mode]} for ${m}:${sec} more`);
+  }
   if (s.messages_pending) warn.push(`Preparing ${s.messages_pending} message(s)…`);
   if (s.playing) warn.push("Playing…");
   else if (s.cooldown_left) warn.push(`Cooldown ${s.cooldown_left}s`);
