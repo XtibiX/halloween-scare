@@ -31,15 +31,44 @@ class Camera:
     """Main stream is JPEG-encoded in hardware for the web page; the small
     lores stream is used for motion detection."""
 
-    def __init__(self, width, height, fps, tuning=""):
-        self.picam2 = Picamera2(tuning=Picamera2.load_tuning_file(tuning) if tuning else None)
+    def __init__(self, width, height, fps, tuning="", ev=0.0, max_exposure_ms=0, max_gain=0):
+        self.picam2 = Picamera2(tuning=self.load_tuning(tuning, max_exposure_ms, max_gain))
         config = self.picam2.create_video_configuration(
             main={"size": (width, height)},
             lores={"size": LORES_SIZE, "format": "YUV420"},
-            controls={"FrameRate": fps},
+            controls=self.exposure_controls(fps, ev, max_exposure_ms),
         )
         self.picam2.configure(config)
         self.jpeg = FrameBuffer()
+
+    @staticmethod
+    def load_tuning(name, max_exposure_ms, max_gain):
+        """The colour profile also caps auto exposure (66 ms, gain 8 on the OV5647),
+        far too little at night, so its limits are raised in the copy we load."""
+        if not name and not (max_exposure_ms or max_gain):
+            return None
+        if not name:
+            name = Picamera2.global_camera_info()[0]["Model"] + ".json"
+        tuning = Picamera2.load_tuning_file(name)
+        for algo in tuning.get("algorithms", []):
+            agc = algo.get("rpi.agc")
+            if not agc:
+                continue
+            for channel in agc.get("channels", [agc]):
+                for limits in channel.get("exposure_modes", {}).values():
+                    if max_exposure_ms:
+                        limits["shutter"][-1] = max(limits["shutter"][-1], int(max_exposure_ms * 1000))
+                    if max_gain:
+                        limits["gain"][-1] = max(limits["gain"][-1], float(max_gain))
+        return tuning
+
+    @staticmethod
+    def exposure_controls(fps, ev, max_exposure_ms):
+        """In the dark, auto exposure may use up to max_exposure_ms per frame
+        (the frame rate drops to match); ev brightens (+) or darkens (-)."""
+        fastest = int(1_000_000 / fps)
+        slowest = max(fastest, int(max_exposure_ms * 1000))
+        return {"FrameDurationLimits": (fastest, slowest), "ExposureValue": float(ev)}
 
     def start(self):
         self.picam2.start_recording(MJPEGEncoder(), FileOutput(self.jpeg))

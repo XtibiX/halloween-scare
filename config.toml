@@ -68,10 +68,17 @@ look_seconds = 1.5          # how long to look at the visitors before deciding
 [camera]
 width = 640
 height = 480
-fps = 10
+fps = 15
 # libcamera colour profile, e.g. "ov5647_noir.json" for a NoIR camera (no infrared filter,
 # pink pictures in daylight). Empty = the default for the sensor.
 tuning = ""
+# Brightness in the dark: auto exposure may use up to max_exposure_ms per frame (the frame
+# rate drops below fps to match, which is fine for motion), and ev brightens the picture
+# (+1 = twice as bright, 0 = normal). Longer exposure blurs people who move fast.
+# max_gain amplifies the signal further when that's not enough (grainier picture).
+max_exposure_ms = 66
+max_gain = 32
+ev = 0.0
 
 [web]
 host = "0.0.0.0"
