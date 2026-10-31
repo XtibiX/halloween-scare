@@ -19,6 +19,13 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
   then sox effects. Takes several seconds per sentence on the Pi, so speech is pre-rendered
   into `cache/` on startup and when messages change. Never render during a scare if it can be avoided.
 - Audio: PipeWire + WirePlumber, playback via `pw-play`. Scare and ambient sounds mix in PipeWire.
+- Lights (optional): Philips Hue via the bridge's local REST API v1 (`scare/lights.py`, stdlib urllib, https with
+  the bridge's self-signed certificate). `[lights]` in config, bridge/key/lamp ids in `config.local.toml`. The speaker
+  only tells it what plays (`music(mode)`, `playing(kind, path, mode)`); its own thread sends one lamp command per
+  0.1 s (bridge limit ~10/s), brightness follows the file's loudness envelope (wav via `wave`, others via sox;
+  mp3 can't be decoded here, so it flickers). Scary flashes white at most ~3/s; kids and unknown modes never flash.
+  Saves the lamps' state when the show starts, restores it when it ends. Errors never block a scare.
+  CLI: `.venv/bin/python -m scare.lights pair|list|test`.
 - Web: Flask on port 8000 (`scare/web.py`, `templates/index.html`)
 
 ## Layout
@@ -56,6 +63,8 @@ Full user-facing steps are in README.md; keep both in sync.
 5. Pair the speaker with `bluetoothctl` (pair, trust, connect) and put its MAC in `config.local.toml`.
    Current speaker: MEGABOOM 3 (MAC in `config.local.toml`)
 6. `systemctl --user enable --now halloween` (setup.sh already copied `halloween.service`)
+7. Optional Hue lights: `.venv/bin/python -m scare.lights pair` (press the bridge button), put the printed
+   `[lights]` in `config.local.toml`, pick lamp ids with `... list`, try with `... test`
 
 ## Running
 - Manually: `.venv/bin/python -m scare.main` (from this folder)

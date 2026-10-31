@@ -43,6 +43,7 @@ class Speaker:
         self._ambient_on = False
         self._ambient_proc = None
         self.silent = False
+        self.lights = None  # scare.lights.Lights, follows what plays (set by the controller)
 
     @property
     def busy(self):
@@ -264,14 +265,21 @@ class Speaker:
             if sounds:
                 sound = random.choice(sounds)
                 log.info("Sound: %s", sound.name)
+                self._show("scare", sound, mode)
                 self.play(sound)
             if speech:
                 log.info("Saying: %s", text)
+                self._show("voice", speech, mode)
                 self.play(speech)
         except Exception:
             log.exception("Scare playback failed")
         finally:
+            self._show(None)
             self._lock.release()
+
+    def _show(self, kind, path=None, mode=None):
+        if self.lights:
+            self.lights.playing(kind, path, mode)
 
     def start_ambient(self):
         """Loops random ambient sounds of the current mode quietly forever
@@ -281,11 +289,15 @@ class Speaker:
                 sounds = self.ambient_sounds()
                 if not sounds or self.ambient_volume <= 0 or self.silent:
                     self._ambient_on = False
+                    if self.lights:
+                        self.lights.music(None)
                     time.sleep(1)
                     continue
                 self._ambient_on = True
                 try:
                     self.ensure_connected()
+                    if self.lights:
+                        self.lights.music(self.mode)
                     self._ambient_proc = self._pw_play(random.choice(sounds), self.ambient_volume)
                     self._ambient_proc.wait()
                 except Exception as e:

@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 from .audio import Speaker
+from .lights import Lights
 from .motion import MotionDetector
 from .web import create_app
 
@@ -25,6 +26,7 @@ TUNABLE = {
     "volume": (float, 0.0, 1.5),
     "ambient_volume": (float, 0.0, 1.0),
     "kid_height_cm": (int, 80, 200),
+    "lights": (bool, None, None),
 }
 # Two calibration spots must be this far apart (feet, fraction of the picture height)
 MIN_SPOT_GAP = 0.08
@@ -55,6 +57,7 @@ class Controller:
             "volume": self.cfg["speaker"]["volume"],
             "ambient_volume": self.cfg["speaker"]["ambient_volume"],
             "kid_height_cm": self.auto["kid_height_cm"],
+            "lights": self.cfg.get("lights", {}).get("start_on", True),
             # Auto mode calibration, set by calibrate(): up to two spots, each
             # [feet, size]: where the feet are (fraction of the picture height,
             # 0 = top) and how tall 1 cm looks there (same unit). Empty = not calibrated
@@ -65,6 +68,8 @@ class Controller:
             self.settings.update({k: v for k, v in saved.items() if k in self.settings})
 
         self.speaker = Speaker(root, self.cfg)
+        self.lights = Lights(self.cfg.get("lights", {}))
+        self.speaker.lights = self.lights
         if not self._valid_mode(self.settings["mode"]):
             self.settings["mode"] = self.speaker.mode
         self.detector = MotionDetector(m["pixel_threshold"], m["area_percent"], m["frames_required"])
@@ -96,6 +101,7 @@ class Controller:
         mode = self.settings["mode"]
         self.speaker.set_mode(self.auto["kid_mode"] if mode in (AUTO, OFF) else mode)
         self.speaker.set_silent(mode == OFF)
+        self.lights.active = self.settings["lights"] and mode != OFF
 
     def update_settings(self, changes):
         for name, value in changes.items():
@@ -286,6 +292,8 @@ class Controller:
             "speaker_connected": self.speaker.connected(),
             "speaker_mac": self.speaker.mac,
             "playing": self.speaker.busy,
+            "lights_configured": self.lights.configured,
+            "lights_error": self.lights.error,
             "cooldown_left": max(0, round(cooldown_left)) if self.scare_count else 0,
             "last_scare_at": self.last_scare_at,
             "last_scare_reason": self.last_scare_reason,
@@ -335,6 +343,7 @@ def main():
     ctl = Controller()
     ctl.speaker.prerender()
     ctl.speaker.start_ambient()
+    ctl.lights.start()
     ctl.start_camera()
     if ctl.camera:
         threading.Thread(target=ctl.detect_loop, daemon=True).start()

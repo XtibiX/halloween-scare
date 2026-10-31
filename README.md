@@ -22,6 +22,7 @@ A quiet background sound loops in between. Everything is controlled from a web p
 | **Speaker** | Any Bluetooth speaker (tested with UE MEGABOOM 3) |
 | **Network** | Wi-Fi or Ethernet, so you can open the web page from a phone on the same network |
 | **Light** | Some light where visitors stand: the camera can't see in the dark |
+| **Hue lights** (optional) | Philips Hue colour lamps and a Hue Bridge on the same network, for a light show |
 
 ## Installation
 
@@ -109,10 +110,35 @@ Open **`http://<pi-name>.local:8000`** on your phone (or `http://<pi-ip-address>
 The first start renders all the messages with Piper, which takes 15 seconds per message on a Pi 4
 (a few minutes in total). The page shows "Preparing … messages" until it's done.
 
+### 6. Philips Hue lights (optional)
+
+Pair the Pi with the Hue Bridge (it finds the bridge on the network, or give its IP address after `pair`),
+then press the round button on the bridge when asked:
+
+```bash
+.venv/bin/python -m scare.lights pair
+```
+
+Copy the `[lights]` lines it prints into `config.local.toml`, then list the lamps and put the ids of
+the ones by the door in `lights = [...]`:
+
+```bash
+.venv/bin/python -m scare.lights list
+.venv/bin/python -m scare.lights test     # a short show, no sound
+systemctl --user restart halloween
+```
+
+While the background sound plays, the lamps drift slowly between spooky colours. During a scare they
+follow the sound: red light that pulses with the voice in the scary mode, with white flashes (at most 3
+a second) on the scare sound; soft green and purple in the kid-friendly mode, which never flashes. When
+the sound stops, or in Av, the lamps go back to how they were. If the lights run ahead of the sound, raise
+`delay_ms` under `[lights]`.
+
 ## Using it
 
 - **Mode buttons** at the top switch between Skummel, Barnevennlig, Auto and Av (off).
 - **Armed/Disarmed** turns motion scares on or off but keeps the background sound. **Av** turns everything off.
+- **Lights** (only shown when Hue is set up) turns the light show on or off.
 - **Scare now** plays a scare right away; type text in the box to make it say something specific.
 - **Tuning sliders:** how much movement triggers a scare, time between scares, volumes.
 - **Edit content for** picks which mode's messages and sounds you're editing below.
@@ -155,7 +181,7 @@ systemctl --user restart halloween
 ```
 config.toml               settings and per-mode voices
 modes/scary/, modes/kids/ messages.txt, scare/ and ambient/ sounds for each mode
-scare/                    the app (camera, motion, people detection, audio, web)
+scare/                    the app (camera, motion, people detection, audio, Hue lights, web)
 templates/index.html      the web page
 tests/                    automatic tests (no camera or speaker needed)
 setup.sh, make_sounds.sh  setup and starter-sound scripts
@@ -185,6 +211,7 @@ They take a few seconds and need no camera, speaker or voices. GitHub runs them 
 | `rpicam-hello: symbol lookup error` | Camera tools and libcamera out of sync after an update: `sudo apt full-upgrade` |
 | Camera picture is pink | A NoIR camera (no infrared filter). Add `[camera]` with `tuning = "ov5647_noir.json"` to `config.local.toml` (Module v2: `imx219_noir.json`, Module 3: `imx708_noir.json`) and restart |
 | Start of a sound gets cut off | Normal for Bluetooth speakers waking up; the background sound keeps the speaker awake |
+| Hue lights say "Error: ..." | Check that the bridge has the same IP address (give it a fixed one in the router) and that the key in `config.local.toml` is right; pair again if needed |
 | Page doesn't show changes | Close the browser tab and open the page again |
 | SSH drops kill your terminal | Run long sessions inside `tmux`; the app itself runs as a service and is unaffected |
 | Slow or laggy over Wi-Fi | Turn off Wi-Fi power saving: `printf '[connection]\nwifi.powersave = 2\n' \| sudo tee /etc/NetworkManager/conf.d/wifi-powersave-off.conf` and reboot |

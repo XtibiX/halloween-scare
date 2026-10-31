@@ -84,6 +84,7 @@
       <div>Speaker<b id="sSpeaker">–</b></div>
       <div>Last scare<b id="sLast">–</b></div>
       <div>Scares tonight<b id="sCount">0</b></div>
+      <div>Hue lights<b id="sLights">–</b></div>
     </div>
     <p class="note warn" id="sWarn" hidden></p>
   </section>
@@ -92,6 +93,7 @@
     <div class="row">
       <button class="big" id="armBtn">…</button>
       <button class="big scare" id="scareBtn">👻 Scare now</button>
+      <button class="big" id="lightsBtn" hidden>…</button>
     </div>
     <label for="sayText">Say something now (leave empty for a random message)</label>
     <div class="row">
@@ -272,6 +274,10 @@ function render() {
     : s.speaker_connected ? "Connected" : "Not connected";
   $("sLast").textContent = s.last_scare_at ? `${s.last_scare_at} (${s.last_scare_reason})` : "–";
   $("sCount").textContent = s.scare_count;
+  $("sLights").textContent = !s.lights_configured ? "Not set up" : s.lights_error ? "Error: " + s.lights_error
+    : !s.lights ? "Off" : s.mode === "off" ? "Off (mode Av)" : "On";
+  $("lightsBtn").hidden = !s.lights_configured;
+  $("lightsBtn").textContent = s.lights ? "💡 Lights: on" : "💡 Lights: off";
 
   const warn = [];
   if (s.mode === "off") warn.push("Off: no scares and no sound");
@@ -303,6 +309,7 @@ async function poll() {
 }
 
 $("armBtn").onclick = async () => { state = await api("/api/arm", {armed: !state.armed}); render(); };
+$("lightsBtn").onclick = async () => { state = await api("/api/settings", {lights: !state.lights}); render(); };
 $("scareBtn").onclick = () => api("/api/test", {}).then(poll);
 $("sayBtn").onclick = () => api("/api/test", {text: $("sayText").value}).then(poll);
 $("saveMsgBtn").onclick = async () => {

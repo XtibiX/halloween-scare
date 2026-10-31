@@ -83,3 +83,16 @@ ev = 0.0
 [web]
 host = "0.0.0.0"
 port = 8000
+
+# Philips Hue light show: slow spooky colours while the background sound plays,
+# lights that follow the scare sound and the voice (white flashes in the scary
+# mode, at most 3 a second; the kid mode never flashes). Lamps go back to how they
+# were when the sound stops. Pair once with `.venv/bin/python -m scare.lights pair`
+# and put bridge, key and lights in config.local.toml. Empty = no lights.
+[lights]
+bridge = ""                 # IP address of the Hue Bridge
+key = ""                    # app key from pairing
+lights = []                 # lamp ids, e.g. ["3", "4"]: see `python -m scare.lights list`
+start_on = true             # can be switched on the web page
+brightness = 1.0            # 0.05 - 1.0, scales every effect
+delay_ms = 200              # Bluetooth speakers play late; the lights wait this long to match
