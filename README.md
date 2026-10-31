@@ -10,6 +10,8 @@ A quiet background sound loops in between. Everything is controlled from a web p
   - 🎯 *Auto*: estimates visitors' height and plays kid-friendly if anyone is under 130 cm
   - ⏻ *Av*: off
 - **Natural voices** with [Piper](https://github.com/OHF-Voice/piper1-gpl) neural text-to-speech, running offline on the Pi
+- **Hue light show** (optional add-on): Philips Hue lamps drift in spooky colours with the background sound
+  and pulse with the scare sound and voice
 - **Web page** with live camera view, mode buttons, sensitivity and volume sliders, message editor and sound uploads
 
 ## What you need
@@ -21,7 +23,7 @@ A quiet background sound loops in between. Everything is controlled from a web p
 | **Camera** | Any Raspberry Pi camera on the ribbon connector (developed with Camera Module v1.3, OV5647) |
 | **Speaker** | Any Bluetooth speaker (tested with UE MEGABOOM 3) |
 | **Network** | Wi-Fi or Ethernet, so you can open the web page from a phone on the same network |
-| **Light** | Some light where visitors stand: the camera can't see in the dark |
+| **Light** | Some light where visitors stand: the camera can't see in the dark (in dim light it uses longer exposure and more gain, see `[camera]` in `config.toml`) |
 | **Hue lights** (optional) | Philips Hue colour lamps and a Hue Bridge on the same network, for a light show |
 
 ## Installation
@@ -171,9 +173,9 @@ Calibrate again whenever you move the camera, or after changing the person detec
 ## Configuration
 
 `config.toml` holds the defaults: speaker address, volumes, motion sensitivity, the voice and sox effects for
-each mode, and Auto mode settings. Changes made on the web page are saved in `settings.json` and override
+each mode, Auto mode, camera and Hue light settings. Changes made on the web page are saved in `settings.json` and override
 `config.toml` (delete it to go back to the defaults). `config.local.toml` holds machine-specific values like
-the speaker address (and the camera colour profile for a NoIR camera) and overrides `config.toml`. Restart after editing either file:
+the speaker address, the Hue bridge and its key (and the camera colour profile for a NoIR camera) and overrides `config.toml`. Restart after editing either file:
 
 ```bash
 systemctl --user restart halloween
