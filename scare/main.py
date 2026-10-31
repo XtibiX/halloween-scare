@@ -136,6 +136,21 @@ class Controller:
                 log.info("Auto: back to %s", self.speaker.modes[self.auto["kid_mode"]]["label"])
             self.speaker.set_mode(self.base_mode())
 
+    def end_hold_if_child(self, people):
+        """A child in view ends the scary background at once, without waiting
+        for the next scare (which may be up to cooldown_seconds away)."""
+        if not self.scary_until or self.settings["mode"] != AUTO:
+            return
+        limit = self.settings["kid_height_cm"]
+        child = min((p["height_cm"] for p in people if p["height_cm"] is not None and p["height_cm"] < limit),
+                    default=None)
+        if child is None:
+            return
+        self.scary_until = 0.0
+        log.info("Auto: child in view (%d cm), back to %s", child,
+                 self.speaker.modes[self.auto["kid_mode"]]["label"])
+        self.speaker.set_mode(self.base_mode())
+
     def scary_hold_loop(self):
         while True:
             time.sleep(1)
@@ -313,7 +328,7 @@ class Controller:
             if self.settings["mode"] != AUTO or time.monotonic() - self.motion_at > 2:
                 continue
             try:
-                self.look_for_people()
+                self.end_hold_if_child(self.look_for_people())
             except Exception:
                 log.exception("Person detection failed")
                 time.sleep(5)

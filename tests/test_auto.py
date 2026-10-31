@@ -93,6 +93,18 @@ class AutoModeTest(AppTestCase):
         self.scare()
         self.assertEqual(self.ctl.speaker.mode, "kids")
 
+    def test_child_in_view_ends_the_hold_without_a_scare(self):
+        self.see(360)
+        self.scare()
+        self.see(360, 340)  # adults only: keeps the hold
+        self.ctl.end_hold_if_child(self.ctl.look_for_people())
+        self.assertEqual(self.ctl.speaker.mode, "scary")
+        self.see(360, 200)  # a child walks up
+        with self.assertLogs("halloween", "INFO"):
+            self.ctl.end_hold_if_child(self.ctl.look_for_people())
+        self.assertEqual(self.ctl.speaker.mode, "kids")
+        self.assertEqual(self.ctl.scary_until, 0.0)
+
     def test_leaving_auto_ends_the_hold(self):
         self.see(360)
         self.scare()

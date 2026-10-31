@@ -161,7 +161,8 @@ nobody seen clearly) it always picks kid-friendly.
 
 The background sound (and the Hue lights) are kid-friendly in Auto. After a scary scare they stay scary for
 3 minutes (`scary_hold_seconds` under `[auto]`), counted again from each scary scare; the page shows the time
-left. Every scare in that time still checks the visitors first, and a kid-friendly result switches back at once.
+left. Every scare in that time still checks the visitors first, and a kid-friendly result switches back at once. A child
+seen by the camera between scares also switches it back at once, without waiting for the next scare.
 
 For it to work:
 1. Place the camera **1-1.5 m off the ground**, level or tilted slightly down, about **3 m** from where visitors

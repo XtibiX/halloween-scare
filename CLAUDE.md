@@ -48,7 +48,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
   than `kid_height_cm` (130), or nobody is seen clearly, or it isn't calibrated, it plays the kid mode,
   else the scary mode. Always fail towards kid mode. Background sound and lights (`base_mode()`) are the kid mode
   in Auto, except for `scary_hold_seconds` (180) after a scary scare (restarted by each one); every scare still
-  decides by height, and a kid result ends the hold at once (`_hold_after_auto`, `check_scary_hold`). Height = box height / size of 1 cm at the feet position.
+  decides by height, and a kid result ends the hold at once (`_hold_after_auto`, `check_scary_hold`), as does a child seen by
+  `people_watch_loop` between scares (`end_hold_if_child`). Height = box height / size of 1 cm at the feet position.
   Calibrated on the web page with a person of known height at two spots (`settings["calibration"]`, [feet, size]
   each); the size grows linearly with how low the feet are in the picture (flat ground, camera above it), so
   heights are right at any distance. One spot = same scale everywhere. Feet cut off = no height.
