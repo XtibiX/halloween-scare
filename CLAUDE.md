@@ -10,7 +10,8 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
 - Camera Module v1.3 (OV5647) NoIR (no infrared filter) on the CSI ribbon connector. Pictures are pink in
   daylight without `tuning = "ov5647_noir.json"` under `[camera]` in `config.local.toml`
 - Bluetooth speaker (MAC goes in `config.local.toml` under `[speaker]`, not in git)
-- Camera night settings under `[camera]`: `max_exposure_ms`, `max_gain` (raised in the loaded tuning copy, since
+- Camera low-light settings under `[camera]`, added because the picture was too dark at the night test
+  (2026-10-30): `max_exposure_ms`, `max_gain` (raised in the loaded tuning copy, since
   the OV5647 tuning caps auto exposure at 66 ms / gain 8) and `ev`; the frame rate drops below `fps` in the dark
 - Philips Hue Bridge (192.168.68.72) with two lamps, Hue Play 1 and 2 (ids "1", "2"); add-on enabled, key in
   `config.local.toml`

@@ -23,7 +23,7 @@ A quiet background sound loops in between. Everything is controlled from a web p
 | **Camera** | Any Raspberry Pi camera on the ribbon connector (developed with Camera Module v1.3, OV5647) |
 | **Speaker** | Any Bluetooth speaker (tested with UE MEGABOOM 3) |
 | **Network** | Wi-Fi or Ethernet, so you can open the web page from a phone on the same network |
-| **Light** | Some light where visitors stand: the camera can't see in the dark (in dim light it uses longer exposure and more gain, see `[camera]` in `config.toml`) |
+| **Light** | Some light where visitors stand: the camera can't see in the dark (for low light at night it uses longer exposure and more gain; if the picture is still too dark, raise `max_exposure_ms`, `max_gain` or `ev` under `[camera]`) |
 | **Hue lights** (optional) | Philips Hue colour lamps and a Hue Bridge on the same network, for a light show |
 
 ## Installation
