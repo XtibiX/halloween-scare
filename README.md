@@ -110,7 +110,10 @@ Open **`http://<pi-name>.local:8000`** on your phone (or `http://<pi-ip-address>
 The first start renders all the messages with Piper, which takes 15 seconds per message on a Pi 4
 (a few minutes in total). The page shows "Preparing … messages" until it's done.
 
-### 6. Philips Hue lights (optional)
+### 6. Philips Hue lights (optional add-on)
+
+The light show is an add-on, off unless `enabled = true` under `[lights]` in `config.local.toml`
+(set it back to `false` to switch it off completely; the page then shows nothing about lights).
 
 Pair the Pi with the Hue Bridge (it finds the bridge on the network, or give its IP address after `pair`),
 then press the round button on the bridge when asked:
@@ -119,7 +122,7 @@ then press the round button on the bridge when asked:
 .venv/bin/python -m scare.lights pair
 ```
 
-Copy the `[lights]` lines it prints into `config.local.toml`, then list the lamps and put the ids of
+Copy the `[lights]` lines it prints (they include `enabled = true`) into `config.local.toml`, then list the lamps and put the ids of
 the ones by the door in `lights = [...]`:
 
 ```bash

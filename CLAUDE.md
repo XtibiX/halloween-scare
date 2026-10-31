@@ -19,7 +19,7 @@ A quiet ambient loop plays all the time. A web page on the LAN controls it.
   then sox effects. Takes several seconds per sentence on the Pi, so speech is pre-rendered
   into `cache/` on startup and when messages change. Never render during a scare if it can be avoided.
 - Audio: PipeWire + WirePlumber, playback via `pw-play`. Scare and ambient sounds mix in PipeWire.
-- Lights (optional): Philips Hue via the bridge's local REST API v1 (`scare/lights.py`, stdlib urllib, https with
+- Lights (optional add-on, only imported when `[lights] enabled = true`, else `ctl.lights` is None): Philips Hue via the bridge's local REST API v1 (`scare/lights.py`, stdlib urllib, https with
   the bridge's self-signed certificate). `[lights]` in config, bridge/key/lamp ids in `config.local.toml`. The speaker
   only tells it what plays (`music(mode)`, `playing(kind, path, mode)`); its own thread sends one lamp command per
   0.1 s (bridge limit ~10/s), brightness follows the file's loudness envelope (wav via `wave`, others via sox;

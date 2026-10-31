@@ -136,7 +136,7 @@ class LightsTest(unittest.TestCase):
 
 
 class LightsInAppTest(AppTestCase):
-    local = '[lights]\nbridge = "10.0.0.2"\nkey = "k"\nlights = ["1"]\n'
+    local = '[lights]\nenabled = true\nbridge = "10.0.0.2"\nkey = "k"\nlights = ["1"]\n'
 
     def test_lights_follow_the_mode_and_setting(self):
         lights = self.ctl.lights
@@ -163,11 +163,19 @@ class LightsInAppTest(AppTestCase):
         self.assertEqual(seen, ["scare", "voice", None])
         self.assertIsNone(self.ctl.lights._sound)
 
-    def test_no_lights_section_means_not_configured(self):
-        self.assertEqual(self.ctl.status()["lights_configured"], True)
-        (self.root / "config.local.toml").unlink()
+    def test_add_on_is_off_unless_enabled(self):
+        self.assertTrue(self.ctl.status()["lights_enabled"])
         from scare.main import Controller
-        self.assertFalse(Controller(self.root).lights.configured)
+        for local in (None, self.local.replace("enabled = true", "enabled = false")):
+            (self.root / "config.local.toml").unlink(missing_ok=True)
+            if local:
+                (self.root / "config.local.toml").write_text(local)
+            ctl = Controller(self.root)
+            self.assertIsNone(ctl.lights)
+            self.assertIsNone(ctl.speaker.lights)
+            ctl.update_settings({"mode": "kids", "lights": True})  # must not fail without the add-on
+            s = ctl.status()
+            self.assertFalse(s["lights_enabled"] or s["lights_configured"])
 
 
 if __name__ == "__main__":

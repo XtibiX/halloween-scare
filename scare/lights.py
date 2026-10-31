@@ -1,4 +1,5 @@
-"""Philips Hue light show, driven by what the speaker plays.
+"""Philips Hue light show, driven by what the speaker plays. An add-on:
+only loaded when [lights] enabled = true in the config.
 
 While the background sound plays, the lamps drift slowly between spooky
 colours. The scare sound and the voice take over: the lamps follow the
@@ -285,7 +286,7 @@ def _pair(bridge=None):
     else:
         sys.exit("Timed out: the button wasn't pressed.")
     print("\nPaired. Put this in config.local.toml (then pick lamps with: python -m scare.lights list):\n")
-    print(f'[lights]\nbridge = "{bridge}"\nkey = "{key}"\nlights = []')
+    print(f'[lights]\nenabled = true\nbridge = "{bridge}"\nkey = "{key}"\nlights = []')
 
 
 def main(argv):

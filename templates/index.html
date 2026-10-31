@@ -84,7 +84,7 @@
       <div>Speaker<b id="sSpeaker">–</b></div>
       <div>Last scare<b id="sLast">–</b></div>
       <div>Scares tonight<b id="sCount">0</b></div>
-      <div>Hue lights<b id="sLights">–</b></div>
+      <div id="lightsStat" hidden>Hue lights<b id="sLights">–</b></div>
     </div>
     <p class="note warn" id="sWarn" hidden></p>
   </section>
@@ -274,6 +274,7 @@ function render() {
     : s.speaker_connected ? "Connected" : "Not connected";
   $("sLast").textContent = s.last_scare_at ? `${s.last_scare_at} (${s.last_scare_reason})` : "–";
   $("sCount").textContent = s.scare_count;
+  $("lightsStat").hidden = !s.lights_enabled;
   $("sLights").textContent = !s.lights_configured ? "Not set up" : s.lights_error ? "Error: " + s.lights_error
     : !s.lights ? "Off" : s.mode === "off" ? "Off (mode Av)" : "On";
   $("lightsBtn").hidden = !s.lights_configured;
